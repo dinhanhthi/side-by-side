@@ -1,6 +1,12 @@
-# Side by Side - Photo Combiner
+<p align="center">
+  <img src="logo.svg" alt="Side by Side - Photo Combiner" width="100" />
+</p>
 
-A simple web tool to combine two photos into one image.
+<h1 align="center">Side by Side - Photo Combiner</h1>
+
+<p align="center">
+  A simple web tool to combine two photos into one image.
+</p>
 
 ## Features
 
