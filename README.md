@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="logo.svg" alt="Side by Side - Photo Combiner" width="100" />
+  <img src="logo.png" alt="Side by Side - Photo Combiner" width="100" />
 </p>
 
 <h1 align="center">Side by Side - Photo Combiner</h1>
