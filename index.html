@@ -151,6 +151,38 @@
             display: none;
         }
 
+        .remove-image-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            transition: background 0.2s ease, transform 0.15s ease;
+        }
+
+        .remove-image-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .upload-box.has-image .remove-image-btn {
+            display: flex;
+        }
+
+        .remove-image-btn:hover {
+            background: rgba(239, 68, 68, 0.9);
+            transform: scale(1.1);
+        }
+
         /* Preview Area */
         .preview-area {
             background: var(--surface);
@@ -564,6 +596,11 @@
                             <p>Click, drag, or paste to upload</p>
                         </div>
                         <img class="preview-img" id="preview1" style="display: none;" alt="Preview 1">
+                        <button class="remove-image-btn" type="button" data-slot="1" aria-label="Remove photo 1" title="Remove photo">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
                     <div class="upload-box" id="upload2">
                         <input type="file" id="file2" accept="image/*">
@@ -575,6 +612,11 @@
                             <p>Click, drag, or paste to upload</p>
                         </div>
                         <img class="preview-img" id="preview2" style="display: none;" alt="Preview 2">
+                        <button class="remove-image-btn" type="button" data-slot="2" aria-label="Remove photo 2" title="Remove photo">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
 
@@ -752,6 +794,32 @@
                 loadImageToSlot(e.target.result, uploadBox, previewImg, imageNumber);
             };
             reader.readAsDataURL(file);
+        }
+
+        function removeImage(imageNumber) {
+            const uploadBox = imageNumber === 1 ? upload1 : upload2;
+            const previewImg = imageNumber === 1 ? preview1 : preview2;
+            const fileInput = imageNumber === 1 ? file1 : file2;
+
+            if (imageNumber === 1) {
+                image1 = null;
+            } else {
+                image2 = null;
+            }
+
+            previewImg.src = '';
+            previewImg.style.display = 'none';
+            uploadBox.classList.remove('has-image');
+            fileInput.value = '';
+
+            if (!image1 || !image2) {
+                placeholder.style.display = '';
+                previewCanvas.style.display = 'none';
+                downloadBtn.disabled = true;
+                copyBtn.disabled = true;
+            }
+
+            updateUI();
         }
 
         function getPasteTargetSlot() {
@@ -949,6 +1017,14 @@
                 e.preventDefault();
                 downloadResult();
             }
+        });
+
+        // Remove image buttons
+        document.querySelectorAll('.remove-image-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                removeImage(parseInt(btn.dataset.slot, 10));
+            });
         });
 
         // Initialize
