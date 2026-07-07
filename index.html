@@ -487,6 +487,23 @@
             cursor: not-allowed;
         }
 
+        .btn-secondary {
+            background: var(--surface-2);
+            color: var(--text);
+            border: 1px solid var(--border);
+            margin-top: 0.75rem;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--border);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .shortcut-hint {
             margin-left: 0.5rem;
             padding: 0.2rem 0.4rem;
@@ -544,7 +561,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                             <p class="label">Photo 1</p>
-                            <p>Click or drag to upload</p>
+                            <p>Click, drag, or paste to upload</p>
                         </div>
                         <img class="preview-img" id="preview1" style="display: none;" alt="Preview 1">
                     </div>
@@ -555,7 +572,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                             <p class="label">Photo 2</p>
-                            <p>Click or drag to upload</p>
+                            <p>Click, drag, or paste to upload</p>
                         </div>
                         <img class="preview-img" id="preview2" style="display: none;" alt="Preview 2">
                     </div>
@@ -638,6 +655,13 @@
                     Download Result
                     <kbd class="shortcut-hint" id="shortcutHint">⌘D</kbd>
                 </button>
+
+                <button class="btn btn-secondary" id="copyBtn" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    <span id="copyBtnLabel">Copy to Clipboard</span>
+                </button>
             </div>
         </div>
 
@@ -666,6 +690,8 @@
         const placeholder = document.getElementById('placeholder');
         const previewCanvas = document.getElementById('previewCanvas');
         const downloadBtn = document.getElementById('downloadBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const copyBtnLabel = document.getElementById('copyBtnLabel');
         const borderToggle = document.getElementById('borderToggle');
         const borderOptions = document.getElementById('borderOptions');
         const borderWidthInput = document.getElementById('borderWidth');
@@ -703,24 +729,47 @@
             });
         }
 
+        function loadImageToSlot(dataUrl, uploadBox, previewImg, imageNumber) {
+            const img = new Image();
+            img.onload = () => {
+                if (imageNumber === 1) {
+                    image1 = img;
+                } else {
+                    image2 = img;
+                }
+                previewImg.src = dataUrl;
+                previewImg.style.display = 'block';
+                uploadBox.classList.add('has-image');
+                updateUI();
+            };
+            img.src = dataUrl;
+        }
+
         function handleFile(file, uploadBox, previewImg, imageNumber) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    if (imageNumber === 1) {
-                        image1 = img;
-                    } else {
-                        image2 = img;
-                    }
-                    previewImg.src = e.target.result;
-                    previewImg.style.display = 'block';
-                    uploadBox.classList.add('has-image');
-                    updateUI();
-                };
-                img.src = e.target.result;
+                loadImageToSlot(e.target.result, uploadBox, previewImg, imageNumber);
             };
             reader.readAsDataURL(file);
+        }
+
+        function getAvailableSlot() {
+            if (!image1) return 1;
+            if (!image2) return 2;
+            return null;
+        }
+
+        function handleClipboardImage(blob) {
+            const slot = getAvailableSlot();
+            if (!slot) return;
+
+            const uploadBox = slot === 1 ? upload1 : upload2;
+            const previewImg = slot === 1 ? preview1 : preview2;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                loadImageToSlot(e.target.result, uploadBox, previewImg, slot);
+            };
+            reader.readAsDataURL(blob);
         }
 
         function updateUI() {
@@ -828,6 +877,7 @@
             previewCanvas.style.display = 'block';
 
             downloadBtn.disabled = false;
+            copyBtn.disabled = false;
         }
 
         // Download
@@ -840,6 +890,58 @@
         }
 
         downloadBtn.addEventListener('click', downloadResult);
+
+        // Copy to clipboard
+        let copyFeedbackTimeout = null;
+
+        async function copyResult() {
+            if (copyBtn.disabled) return;
+
+            try {
+                const blob = await new Promise((resolve, reject) => {
+                    previewCanvas.toBlob((result) => {
+                        if (result) resolve(result);
+                        else reject(new Error('Failed to create image blob'));
+                    }, 'image/png');
+                });
+
+                await navigator.clipboard.write([
+                    new ClipboardItem({ 'image/png': blob })
+                ]);
+
+                copyBtnLabel.textContent = 'Copied!';
+                clearTimeout(copyFeedbackTimeout);
+                copyFeedbackTimeout = setTimeout(() => {
+                    copyBtnLabel.textContent = 'Copy to Clipboard';
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy image:', err);
+                copyBtnLabel.textContent = 'Copy failed';
+                clearTimeout(copyFeedbackTimeout);
+                copyFeedbackTimeout = setTimeout(() => {
+                    copyBtnLabel.textContent = 'Copy to Clipboard';
+                }, 2000);
+            }
+        }
+
+        copyBtn.addEventListener('click', copyResult);
+
+        // Paste image from clipboard into the first available slot
+        document.addEventListener('paste', (e) => {
+            const items = e.clipboardData?.items;
+            if (!items || !getAvailableSlot()) return;
+
+            for (const item of items) {
+                if (item.type.startsWith('image/')) {
+                    const blob = item.getAsFile();
+                    if (!blob) return;
+
+                    e.preventDefault();
+                    handleClipboardImage(blob);
+                    return;
+                }
+            }
+        });
 
         // Keyboard shortcut: Cmd+D (Mac) / Ctrl+D (Win/Linux)
         document.addEventListener('keydown', (e) => {
