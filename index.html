@@ -674,6 +674,7 @@
         // State
         let image1 = null;
         let image2 = null;
+        let lastPastedSlot = null;
         let direction = 'horizontal';
         let hasBorder = false;
         let borderWidth = 0;
@@ -753,21 +754,20 @@
             reader.readAsDataURL(file);
         }
 
-        function getAvailableSlot() {
+        function getPasteTargetSlot() {
             if (!image1) return 1;
             if (!image2) return 2;
-            return null;
+            return lastPastedSlot === 1 ? 2 : 1;
         }
 
         function handleClipboardImage(blob) {
-            const slot = getAvailableSlot();
-            if (!slot) return;
-
+            const slot = getPasteTargetSlot();
             const uploadBox = slot === 1 ? upload1 : upload2;
             const previewImg = slot === 1 ? preview1 : preview2;
             const reader = new FileReader();
             reader.onload = (e) => {
                 loadImageToSlot(e.target.result, uploadBox, previewImg, slot);
+                lastPastedSlot = slot;
             };
             reader.readAsDataURL(blob);
         }
@@ -926,10 +926,10 @@
 
         copyBtn.addEventListener('click', copyResult);
 
-        // Paste image from clipboard into the first available slot
+        // Paste image from clipboard into the next slot (or replace when both are full)
         document.addEventListener('paste', (e) => {
             const items = e.clipboardData?.items;
-            if (!items || !getAvailableSlot()) return;
+            if (!items) return;
 
             for (const item of items) {
                 if (item.type.startsWith('image/')) {
