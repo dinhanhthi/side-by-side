@@ -10,7 +10,8 @@
 
 ## Features
 
-- Combine two photos horizontally or vertically
+- Flexible grids: 2×1, 1×2, 2×2, 3×2, 2×3, 3×3 or custom (up to limit)
+- Diagonal split option for 2-photo layouts (great for dark/light or before/after)
 - Add customizable border (width and color)
 - Download the combined result
 - Runs entirely in browser - no server uploads
@@ -38,11 +39,12 @@ Then open http://localhost:8000 in your browser.
 
 ## Usage
 
-1. Upload two photos by clicking or dragging
-2. Choose direction (horizontal/vertical)
-3. Optionally add a border
-4. Click "Combine Photos"
-5. Download the result
+1. Upload photos by clicking or dragging (number depends on grid)
+2. Choose grid layout (2×1, 1×2, 2×2, ...) or type custom cols × rows
+3. For 2-photo grids: optionally enable "Diagonal split"
+4. Optionally add a border
+5. Preview updates live
+6. Download the result or copy to clipboard
 
 ## License
 
