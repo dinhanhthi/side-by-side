@@ -70,124 +70,113 @@
             }
         }
 
-        /* Upload Area */
-        .upload-section {
-            display: grid;
-            gap: 6px;
-            margin-bottom: 1.5rem;
-            width: 100%;
+        /* Editor stage: the canvas is the single preview surface; a transparent
+           grid overlay on top of it handles upload / drag / paste / pan-zoom. */
+        .workspace {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
         }
 
-        .upload-section.dense .upload-box {
-            padding: 0.5rem;
-            min-height: 110px;
-        }
-
-        .upload-section.dense .upload-icon {
-            width: 24px;
-            height: 24px;
-            margin-bottom: 0.25rem;
-        }
-
-        .upload-section.dense .label,
-        .upload-section.dense p {
-            font-size: 0.7rem;
-        }
-
-        .upload-box {
-            background: var(--surface);
-            border: 2px dashed var(--border);
-            border-radius: var(--radius);
-            padding: 1rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
+        .editor-stage {
             position: relative;
-            overflow: hidden;
-            min-height: 150px;
+            display: inline-block;
+            max-width: 100%;
+            line-height: 0;
+        }
+
+        #previewCanvas {
+            display: block;
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 72vh;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .cell-overlay {
+            position: absolute;
+            inset: 0;
+            display: grid;
             box-sizing: border-box;
+        }
+
+        .overlay-cell {
+            position: relative;
+            min-width: 0;
+            min-height: 0;
+            border: 2px dashed var(--border);
+            border-radius: 8px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-        }
-
-        .upload-box:hover {
-            border-color: var(--primary);
-            background: var(--surface-2);
-        }
-
-        .upload-box.has-image {
-            border-style: solid;
-            border-color: var(--success);
+            text-align: center;
             padding: 0.5rem;
+            cursor: pointer;
+            overflow: hidden;
+            transition: border-color 0.2s ease, background 0.2s ease;
         }
 
-        .upload-box input {
+        .overlay-cell:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.08);
+        }
+
+        .overlay-cell.has-image {
+            border-color: transparent;
+            background: transparent;
+            cursor: grab;
+        }
+
+        .overlay-cell.has-image:active {
+            cursor: grabbing;
+        }
+
+        .overlay-cell.drag-over {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.15);
+        }
+
+        .overlay-cell input {
             display: none;
         }
 
-        .upload-box .upload-icon {
+        .overlay-cell .upload-icon {
             width: 36px;
             height: 36px;
             color: var(--text-muted);
             margin-bottom: 0.5rem;
         }
 
-        .upload-box p {
+        .overlay-cell p {
             color: var(--text-muted);
             font-size: 0.8rem;
             line-height: 1.15;
         }
 
-        .upload-box .label {
+        .overlay-cell .label {
             font-weight: 600;
             color: var(--text);
             margin-bottom: 0.15rem;
             font-size: 0.85rem;
         }
 
-        .upload-box .preview-img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            border-radius: 6px;
-        }
-
-        .image-preview-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            border-radius: 6px;
-            background: #111;
-            cursor: grab;
-        }
-
-        .image-preview-container:active {
-            cursor: grabbing;
-        }
-
-        .image-preview-container .preview-img {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            max-width: none;
-            max-height: none;
-            pointer-events: none;
-            user-select: none;
-            -webkit-user-drag: none;
-        }
-
-        .upload-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .upload-box.has-image .upload-content {
+        .overlay-cell.has-image .upload-content {
             display: none;
+        }
+
+        .cell-overlay.dense .upload-icon {
+            width: 22px;
+            height: 22px;
+            margin-bottom: 0.2rem;
+        }
+
+        .cell-overlay.dense .label,
+        .cell-overlay.dense p {
+            font-size: 0.65rem;
         }
 
         .remove-image-btn {
@@ -213,43 +202,13 @@
             height: 14px;
         }
 
-        .upload-box.has-image .remove-image-btn {
+        .overlay-cell.has-image .remove-image-btn {
             display: flex;
         }
 
         .remove-image-btn:hover {
             background: rgba(239, 68, 68, 0.9);
             transform: scale(1.1);
-        }
-
-        /* Preview Area */
-        .preview-area {
-            background: var(--surface);
-            border-radius: var(--radius);
-            padding: 1.5rem;
-            min-height: 400px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .preview-placeholder {
-            text-align: center;
-            color: var(--text-muted);
-        }
-
-        .preview-placeholder svg {
-            width: 64px;
-            height: 64px;
-            margin-bottom: 1rem;
-            opacity: 0.5;
-        }
-
-        #previewCanvas {
-            max-width: 100%;
-            max-height: 500px;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         }
 
         /* Controls Panel */
@@ -650,30 +609,20 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .preview-area canvas {
-            animation: fadeIn 0.3s ease;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>Side by Side</h1>
-            <p class="subtitle">Combine photos in flexible grids (2×1, 2×2, 3×3...). 100% offline, runs entirely in your browser.</p>
+            <p class="subtitle">Combine any number of photos in flexible grids (2×1, 2×2, 3×3, or custom) with live editing. 100% offline, runs entirely in your browser.</p>
         </header>
 
         <div class="main-grid">
             <div class="workspace">
-                <div class="upload-section"></div>
-
-                <div class="preview-area" id="previewArea">
-                    <div class="preview-placeholder" id="placeholder">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
-                        </svg>
-                        <p id="placeholderText">Upload photos to see preview</p>
-                    </div>
-                    <canvas id="previewCanvas" style="display: none;"></canvas>
+                <div class="editor-stage" id="editorStage">
+                    <canvas id="previewCanvas"></canvas>
+                    <div class="cell-overlay" id="cellOverlay"></div>
                 </div>
             </div>
 
@@ -824,9 +773,8 @@
         const MAX_TOTAL = 12;
 
         // DOM Elements
-        const uploadSection = document.querySelector('.upload-section');
-        const previewArea = document.getElementById('previewArea');
-        const placeholder = document.getElementById('placeholder');
+        const editorStage = document.getElementById('editorStage');
+        const cellOverlay = document.getElementById('cellOverlay');
         const previewCanvas = document.getElementById('previewCanvas');
         const downloadBtn = document.getElementById('downloadBtn');
         const copyBtn = document.getElementById('copyBtn');
@@ -849,47 +797,31 @@
             return cols * rows;
         }
 
-        function renderUploads() {
-            if (!uploadSection) return;
-
+        // Build the transparent interaction grid that sits on top of the canvas.
+        // Each cell handles click-to-upload, drag/drop, remove, and pan/zoom for its slot.
+        function buildOverlay() {
+            if (!cellOverlay) return;
             const total = getTotalSlots();
 
-            // The upload grid mirrors the result's cols×rows structure, but stays compact:
-            // full-width columns with a fixed-height per cell. The chosen aspect ratio is
-            // applied only to the result canvas (getTargetCanvasSize), not here — CSS
-            // aspect-ratio on a grid container was unreliable across browsers.
-            uploadSection.style.setProperty('--cols', cols);
-            uploadSection.style.setProperty('--rows', rows);
-            uploadSection.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
-            uploadSection.style.gridTemplateRows = `repeat(${rows}, auto)`;
-            uploadSection.style.aspectRatio = '';
-            uploadSection.style.maxHeight = '';
-
-            // Compact inner elements when many slots
-            if (total > 4) {
-                uploadSection.classList.add('dense');
-            } else {
-                uploadSection.classList.remove('dense');
-            }
-
-            uploadSection.innerHTML = '';
+            cellOverlay.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+            cellOverlay.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))`;
+            cellOverlay.classList.toggle('dense', total > 4);
+            cellOverlay.innerHTML = '';
 
             for (let i = 0; i < total; i++) {
-                const box = document.createElement('div');
-                box.className = 'upload-box';
-                const hasImg = !!images[i];
-                if (hasImg) box.classList.add('has-image');
+                const cell = document.createElement('div');
+                cell.className = 'overlay-cell';
+                if (images[i]) cell.classList.add('has-image');
 
-                box.innerHTML = `
+                cell.innerHTML = `
                     <input type="file" accept="image/*">
                     <div class="upload-content">
                         <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                         <p class="label">Photo ${i + 1}</p>
-                        <p>Click, drag, or paste to upload</p>
+                        <p>Click, drag, or paste</p>
                     </div>
-                    <img class="preview-img" style="display:${hasImg ? 'block' : 'none'};" alt="Preview ${i + 1}">
                     <button class="remove-image-btn" type="button" data-index="${i}" aria-label="Remove photo ${i + 1}" title="Remove photo">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -897,38 +829,30 @@
                     </button>
                 `;
 
-                const fileInput = box.querySelector('input[type="file"]');
-                const previewImg = box.querySelector('.preview-img');
-                const removeBtn = box.querySelector('.remove-image-btn');
+                const fileInput = cell.querySelector('input[type="file"]');
+                const removeBtn = cell.querySelector('.remove-image-btn');
 
-                // Click to upload (ignore remove clicks)
-                box.addEventListener('click', (e) => {
+                cell.addEventListener('click', (e) => {
                     if (e.target.closest('.remove-image-btn')) return;
+                    if (images[i]) return; // filled → drag to pan instead of re-uploading
                     fileInput.click();
                 });
 
-                // Drag & drop
-                box.addEventListener('dragover', (e) => {
+                cell.addEventListener('dragover', (e) => {
                     e.preventDefault();
-                    box.style.borderColor = 'var(--primary)';
+                    cell.classList.add('drag-over');
                 });
-                box.addEventListener('dragleave', () => {
-                    box.style.borderColor = '';
-                });
-                box.addEventListener('drop', (e) => {
+                cell.addEventListener('dragleave', () => cell.classList.remove('drag-over'));
+                cell.addEventListener('drop', (e) => {
                     e.preventDefault();
-                    box.style.borderColor = '';
+                    cell.classList.remove('drag-over');
                     const file = e.dataTransfer.files[0];
-                    if (file && file.type.startsWith('image/')) {
-                        handleFileForSlot(file, box, previewImg, i);
-                    }
+                    if (file && file.type.startsWith('image/')) loadFileToSlot(file, i);
                 });
 
                 fileInput.addEventListener('change', (e) => {
                     const file = e.target.files[0];
-                    if (file) {
-                        handleFileForSlot(file, box, previewImg, i);
-                    }
+                    if (file) loadFileToSlot(file, i);
                 });
 
                 removeBtn.addEventListener('click', (e) => {
@@ -936,116 +860,89 @@
                     removeImage(i);
                 });
 
-                // Restore preview if image exists
-                if (hasImg && images[i]) {
-                    previewImg.src = images[i].src || '';
-                }
-
-                uploadSection.appendChild(box);
-
-                if (hasImg) {
-                    setupImageInteractivity(box, i);
-                }
-            }
-        }
-
-        function updatePreviewTransform(container, imgEl, transform) {
-            if (!container || !imgEl || !transform) return;
-            const cw = container.clientWidth || 120;
-            const ch = container.clientHeight || 120;
-            const iw = imgEl.naturalWidth || imgEl.width || 100;
-            const ih = imgEl.naturalHeight || imgEl.height || 100;
-            const baseScale = Math.min(cw / iw, ch / ih) || 1;
-            const displayW = iw * baseScale;
-            const displayH = ih * baseScale;
-            imgEl.style.width = displayW + 'px';
-            imgEl.style.height = displayH + 'px';
-            imgEl.style.transform = `translate(-50%, -50%) translate(${transform.panX}px, ${transform.panY}px) scale(${transform.scale})`;
-        }
-
-        function setupImageInteractivity(box, index) {
-            if (!box || !images[index]) return;
-            let container = box.querySelector('.image-preview-container');
-            let previewImg = box.querySelector('.preview-img');
-            if (!previewImg) return;
-
-            if (!container) {
-                container = document.createElement('div');
-                container.className = 'image-preview-container';
-                previewImg.style.display = 'block';
-                previewImg.style.left = '50%';
-                previewImg.style.top = '50%';
-                container.appendChild(previewImg);
-                const removeBtn = box.querySelector('.remove-image-btn');
-                if (removeBtn) {
-                    box.insertBefore(container, removeBtn);
-                } else {
-                    box.appendChild(container);
-                }
+                attachCellInteractivity(cell, i);
+                cellOverlay.appendChild(cell);
             }
 
-            const t = imageTransforms[index] || { scale: 1, panX: 0, panY: 0 };
-            imageTransforms[index] = t;
+            syncOverlay();
+        }
 
-            setTimeout(() => updatePreviewTransform(container, previewImg, t), 0);
+        // Toggle per-cell filled state and match the overlay gap to the border thickness.
+        function syncOverlay() {
+            if (!cellOverlay) return;
+            cellOverlay.querySelectorAll('.overlay-cell').forEach((cell, i) => {
+                cell.classList.toggle('has-image', !!images[i]);
+            });
+            const border = hasBorder ? borderWidth : 0;
+            const rect = previewCanvas.getBoundingClientRect();
+            const scale = (rect.width && previewCanvas.width) ? rect.width / previewCanvas.width : 0;
+            const gapPx = border * scale;
+            cellOverlay.style.gap = gapPx + 'px';
+            cellOverlay.style.padding = gapPx + 'px';
+        }
 
-            // Wheel for zoom (around cursor)
-            container.addEventListener('wheel', (e) => {
+        // Pan / zoom / reset for a slot, operating in target-canvas pixels so the
+        // on-screen preview equals the exported image exactly (single coordinate space).
+        function attachCellInteractivity(cell, index) {
+            const scaleFactor = () => {
+                const rect = previewCanvas.getBoundingClientRect();
+                return rect.width ? (previewCanvas.width / rect.width) : 1;
+            };
+            const ensureT = () => {
+                let t = imageTransforms[index];
+                if (!t) { t = { scale: 1, panX: 0, panY: 0 }; imageTransforms[index] = t; }
+                return t;
+            };
+
+            cell.addEventListener('wheel', (e) => {
+                if (!images[index] || !currentLayout) return;
                 e.preventDefault();
-                const rect = container.getBoundingClientRect();
-                const mx = (e.clientX - rect.left) - container.clientWidth / 2;
-                const my = (e.clientY - rect.top) - container.clientHeight / 2;
+                const t = ensureT();
+                const S = scaleFactor();
+                const rect = previewCanvas.getBoundingClientRect();
+                const cr = currentLayout.cells[index];
+                const tx = (e.clientX - rect.left) * S;
+                const ty = (e.clientY - rect.top) * S;
+                const mx = tx - (cr.x + cr.w / 2);
+                const my = ty - (cr.y + cr.h / 2);
                 const factor = e.deltaY < 0 ? 1.12 : 0.89;
                 const oldScale = t.scale;
-                let newScale = oldScale * factor;
-                newScale = Math.max(0.15, Math.min(10, newScale));
-                const scaleRatio = newScale / oldScale;
-                t.panX = mx - (mx - t.panX) * scaleRatio;
-                t.panY = my - (my - t.panY) * scaleRatio;
+                const newScale = Math.max(0.15, Math.min(10, oldScale * factor));
+                const ratio = newScale / oldScale;
+                t.panX = mx - (mx - t.panX) * ratio;
+                t.panY = my - (my - t.panY) * ratio;
                 t.scale = newScale;
-                updatePreviewTransform(container, previewImg, t);
-                updateUI();
+                renderCanvas();
             }, { passive: false });
 
-            // Drag to pan
-            let dragging = false;
-            let startX = 0, startY = 0, startPanX = 0, startPanY = 0;
-
-            const moveHandler = (e) => {
+            let dragging = false, sx = 0, sy = 0, spx = 0, spy = 0, S = 1;
+            const move = (e) => {
                 if (!dragging) return;
-                const dx = e.clientX - startX;
-                const dy = e.clientY - startY;
-                t.panX = startPanX + dx;
-                t.panY = startPanY + dy;
-                updatePreviewTransform(container, previewImg, t);
+                const t = ensureT();
+                t.panX = spx + (e.clientX - sx) * S;
+                t.panY = spy + (e.clientY - sy) * S;
+                renderCanvas();
             };
-
-            const upHandler = () => {
+            const up = () => {
                 dragging = false;
-                document.removeEventListener('mousemove', moveHandler);
-                document.removeEventListener('mouseup', upHandler);
-                updateUI();
+                document.removeEventListener('mousemove', move);
+                document.removeEventListener('mouseup', up);
             };
-
-            container.addEventListener('mousedown', (e) => {
-                if (e.button !== 0) return;
+            cell.addEventListener('mousedown', (e) => {
+                if (e.button !== 0 || !images[index]) return;
+                if (e.target.closest('.remove-image-btn')) return;
+                const t = ensureT();
                 dragging = true;
-                startX = e.clientX;
-                startY = e.clientY;
-                startPanX = t.panX;
-                startPanY = t.panY;
-                document.addEventListener('mousemove', moveHandler);
-                document.addEventListener('mouseup', upHandler);
+                sx = e.clientX; sy = e.clientY; spx = t.panX; spy = t.panY;
+                S = scaleFactor();
+                document.addEventListener('mousemove', move);
+                document.addEventListener('mouseup', up);
             });
-
-            // Reset on double click
-            container.addEventListener('dblclick', (e) => {
+            cell.addEventListener('dblclick', (e) => {
+                if (!images[index]) return;
                 e.stopPropagation();
-                t.scale = 1;
-                t.panX = 0;
-                t.panY = 0;
-                updatePreviewTransform(container, previewImg, t);
-                updateUI();
+                imageTransforms[index] = { scale: 1, panX: 0, panY: 0 };
+                renderCanvas();
             });
         }
 
@@ -1054,51 +951,27 @@
             img.onload = () => {
                 images[index] = img;
                 imageTransforms[index] = { scale: 1, panX: 0, panY: 0 };
-                // Update the specific upload box in place if present
-                const boxes = uploadSection.querySelectorAll('.upload-box');
-                const box = boxes[index];
-                if (box) {
-                    const previewImg = box.querySelector('.preview-img');
-                    if (previewImg) {
-                        previewImg.src = dataUrl;
-                        previewImg.style.display = 'block';
-                    }
-                    box.classList.add('has-image');
-                }
-                setupImageInteractivity(box, index);
+                syncOverlay();
                 updateUI();
             };
             img.src = dataUrl;
         }
 
-        function handleFileForSlot(file, uploadBox, previewImg, index) {
+        function loadFileToSlot(file, index) {
             const reader = new FileReader();
-            reader.onload = (e) => {
-                loadImageToSlot(index, e.target.result);
-            };
+            reader.onload = (e) => loadImageToSlot(index, e.target.result);
             reader.readAsDataURL(file);
         }
 
         function removeImage(index) {
             images[index] = null;
             imageTransforms[index] = null;
-
-            // Update DOM for this slot
-            const boxes = uploadSection.querySelectorAll('.upload-box');
-            const box = boxes[index];
-            if (box) {
-                const previewImg = box.querySelector('.preview-img');
-                const fileInput = box.querySelector('input[type="file"]');
-                const container = box.querySelector('.image-preview-container');
-                if (container) container.remove();
-                if (previewImg) {
-                    previewImg.src = '';
-                    previewImg.style.display = 'none';
-                }
-                box.classList.remove('has-image');
+            const cell = cellOverlay.querySelectorAll('.overlay-cell')[index];
+            if (cell) {
+                const fileInput = cell.querySelector('input[type="file"]');
                 if (fileInput) fileInput.value = '';
             }
-
+            syncOverlay();
             updateUI();
         }
 
@@ -1127,103 +1000,125 @@
 
         function updateUI() {
             const total = getTotalSlots();
-            const hasAll = images.length >= total && images.slice(0, total).every(img => !!img);
-            if (hasAll) {
-                combinePhotos();
-            } else {
-                drawLayoutPreview();
-                downloadBtn.disabled = true;
-                copyBtn.disabled = true;
-            }
+            const hasAll = images.slice(0, total).every(img => !!img);
+            renderCanvas();
+            downloadBtn.disabled = !hasAll;
+            copyBtn.disabled = !hasAll;
         }
 
-        function drawLayoutPreview() {
+        // Compute the composition layout in target-canvas pixels.
+        // Returns { canvasW, canvasH, border, diagonal, cells:[{x,y,w,h}] }.
+        function computeLayout() {
             const total = getTotalSlots();
-            if (total === 0) return;
-
-            const ctx = previewCanvas.getContext('2d');
             const border = hasBorder ? borderWidth : 0;
 
-            // Use loaded images for ref size if any, else default
             let refImgs = images.slice(0, total).filter(Boolean);
-            if (refImgs.length === 0) {
-                refImgs = [{width: 600, height: 400}];
+            if (refImgs.length === 0) refImgs = [{ width: 600, height: 400 }];
+
+            const size = getTargetCanvasSize(refImgs, cols, rows, border, aspectRatio);
+            const innerW = size.width;
+            const innerH = size.height;
+
+            if (total === 2 && useDiagonal) {
+                // one combined rect split diagonally; both slots share the full area
+                const rect = { x: border, y: border, w: innerW, h: innerH };
+                return {
+                    canvasW: innerW + border * 2,
+                    canvasH: innerH + border * 2,
+                    border, diagonal: true,
+                    cells: [rect, rect]
+                };
             }
 
-            const targetSize = getTargetCanvasSize(refImgs, cols, rows, border, aspectRatio);
-
-            let targetW, targetH;
-            if (targetSize) {
-                targetW = targetSize.width;
-                targetH = targetSize.height;
-            } else {
-                let cellW = 0, cellH = 0;
-                refImgs.forEach(im => {
-                    cellW = Math.max(cellW, im.width || 600);
-                    cellH = Math.max(cellH, im.height || 400);
-                });
-                if (cellW === 0) { cellW = 600; cellH = 400; }
-                targetW = cols * cellW;
-                targetH = rows * cellH;
-            }
-
-            const totalW = targetW + (cols + 1) * border;
-            const totalH = targetH + (rows + 1) * border;
-
-            previewCanvas.width = totalW;
-            previewCanvas.height = totalH;
-
-            // Light background for preview
-            ctx.fillStyle = '#1a1a1e';
-            ctx.fillRect(0, 0, totalW, totalH);
-
-            // Draw cell outlines (faint grid)
-            ctx.strokeStyle = 'rgba(255,255,255,0.25)';
-            ctx.lineWidth = 1;
-
-            const cellW = targetW / cols;
-            const cellH = targetH / rows;
-
+            const cellW = innerW / cols;
+            const cellH = innerH / rows;
+            const cells = [];
             for (let i = 0; i < total; i++) {
                 const r = Math.floor(i / cols);
                 const c = i % cols;
-                const cx = border + c * (cellW + border);
-                const cy = border + r * (cellH + border);
-                ctx.strokeRect(cx + 0.5, cy + 0.5, cellW, cellH);
+                cells.push({
+                    x: border + c * (cellW + border),
+                    y: border + r * (cellH + border),
+                    w: cellW, h: cellH
+                });
             }
+            return {
+                canvasW: innerW + (cols + 1) * border,
+                canvasH: innerH + (rows + 1) * border,
+                border, diagonal: false, cells
+            };
+        }
 
-            // Outer border hint if any
-            if (border > 0) {
-                ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-                ctx.lineWidth = border;
-                ctx.strokeRect(border/2, border/2, totalW - border, totalH - border);
-            }
+        // Draw one image inside a rect using cover-fit (fill + crop) + its transform.
+        function drawCellImage(ctx, img, rect, t) {
+            const tr = t || { scale: 1, panX: 0, panY: 0 };
+            const base = Math.max(rect.w / img.width, rect.h / img.height) || 1;
+            const ds = base * tr.scale;
+            const dw = img.width * ds;
+            const dh = img.height * ds;
+            const dx = rect.x + (rect.w - dw) / 2 + tr.panX;
+            const dy = rect.y + (rect.h - dh) / 2 + tr.panY;
+            ctx.drawImage(img, dx, dy, dw, dh);
+        }
 
-            // If diagonal mode for 2 photos, draw a representative combined rect + diagonal (using cell size)
-            if (total === 2 && useDiagonal) {
-                const cW = targetW;
-                const cH = targetH;
-                const ix = border;
-                const iy = border;
-                ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-                ctx.lineWidth = Math.max(1, border || 1);
-                // faint rect for the combined area
-                ctx.strokeRect(ix, iy, cW, cH);
-                // the diagonal line
-                ctx.strokeStyle = 'rgba(255,255,255,0.7)';
-                ctx.beginPath();
-                if (diagonalDirection === 'tlbr') {
-                    ctx.moveTo(ix, iy);
-                    ctx.lineTo(ix + cW, iy + cH);
-                } else {
-                    ctx.moveTo(ix + cW, iy);
-                    ctx.lineTo(ix, iy + cH);
+        let currentLayout = null;
+
+        // Render the whole composition to the canvas (any fill state: none, some, or all).
+        // Empty cells get a neutral backdrop; the overlay shows their upload hint on top.
+        function renderCanvas() {
+            const total = getTotalSlots();
+            const L = computeLayout();
+            currentLayout = L;
+
+            const ctx = previewCanvas.getContext('2d');
+            previewCanvas.width = Math.max(1, Math.round(L.canvasW));
+            previewCanvas.height = Math.max(1, Math.round(L.canvasH));
+
+            ctx.fillStyle = hasBorder ? borderColor : '#0e0e11';
+            ctx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
+
+            if (L.diagonal) {
+                const { x: ix, y: iy, w: iw, h: ih } = L.cells[0];
+                const tris = diagonalDirection === 'tlbr'
+                    ? [ [[ix,iy],[ix+iw,iy+ih],[ix,iy+ih]], [[ix,iy],[ix+iw,iy],[ix+iw,iy+ih]] ]
+                    : [ [[ix,iy],[ix+iw,iy],[ix,iy+ih]], [[ix+iw,iy],[ix+iw,iy+ih],[ix,iy+ih]] ];
+                for (let i = 0; i < 2; i++) {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(tris[i][0][0], tris[i][0][1]);
+                    ctx.lineTo(tris[i][1][0], tris[i][1][1]);
+                    ctx.lineTo(tris[i][2][0], tris[i][2][1]);
+                    ctx.closePath();
+                    ctx.clip();
+                    ctx.fillStyle = '#1a1a1e';
+                    ctx.fillRect(ix, iy, iw, ih);
+                    if (images[i]) drawCellImage(ctx, images[i], L.cells[i], imageTransforms[i]);
+                    ctx.restore();
                 }
+                ctx.strokeStyle = hasBorder ? borderColor : 'rgba(255,255,255,0.85)';
+                ctx.lineWidth = L.border > 0 ? L.border : Math.max(2, L.canvasW * 0.004);
+                ctx.beginPath();
+                if (diagonalDirection === 'tlbr') { ctx.moveTo(ix, iy); ctx.lineTo(ix + iw, iy + ih); }
+                else { ctx.moveTo(ix + iw, iy); ctx.lineTo(ix, iy + ih); }
                 ctx.stroke();
+            } else {
+                for (let i = 0; i < total; i++) {
+                    const rect = L.cells[i];
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.rect(rect.x, rect.y, rect.w, rect.h);
+                    ctx.clip();
+                    if (images[i]) {
+                        drawCellImage(ctx, images[i], rect, imageTransforms[i]);
+                    } else {
+                        ctx.fillStyle = '#1a1a1e';
+                        ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+                    }
+                    ctx.restore();
+                }
             }
 
-            placeholder.style.display = 'none';
-            previewCanvas.style.display = 'block';
+            syncOverlay();
         }
 
         function setLayout(newCols, newRows) {
@@ -1257,10 +1152,17 @@
             if (customRows) customRows.value = r;
             if (aspectSelect) aspectSelect.value = aspectRatio;
 
+            // Cell geometry changed → reset pan/zoom so photos re-fit cleanly (no jump)
+            resetTransforms();
+
             updateDiagonalVisibility();
-            renderUploads();
-            updatePlaceholderText();
+            buildOverlay();
             updateUI();
+        }
+
+        // Reset every loaded photo's pan/zoom to the default cover-fit
+        function resetTransforms() {
+            imageTransforms = images.map(im => im ? { scale: 1, panX: 0, panY: 0 } : null);
         }
 
         function updateDiagonalVisibility() {
@@ -1289,17 +1191,6 @@
             });
         }
 
-        function updatePlaceholderText() {
-            const textEl = document.getElementById('placeholderText');
-            if (!textEl) return;
-            const total = getTotalSlots();
-            if (total === 1) {
-                textEl.textContent = 'Upload a photo to see preview';
-            } else {
-                textEl.textContent = `Upload ${total} photos to see preview`;
-            }
-        }
-
         // Grid layout controls
         if (gridSelect) {
             gridSelect.addEventListener('change', () => {
@@ -1323,7 +1214,7 @@
         if (aspectSelect) {
             aspectSelect.addEventListener('change', () => {
                 aspectRatio = aspectSelect.value;
-                renderUploads();
+                resetTransforms();
                 updateUI();
             });
         }
@@ -1381,14 +1272,6 @@
             updateUI();
         });
 
-        function drawCover(ctx, img, x, y, w, h) {
-            const scale = Math.max(w / img.width, h / img.height);
-            const dw = img.width * scale;
-            const dh = img.height * scale;
-            ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
-        }
-
-        // Combine photos
         function getTargetCanvasSize(loaded, cols, rows, border, aspectStr) {
             // aspectStr means the aspect ratio of the final combined photo (the whole result)
             const aspect = (aspectStr && aspectStr !== 'auto') ? aspectStr : null;
@@ -1423,211 +1306,6 @@
             return { width: innerW, height: innerH };
         }
 
-        function combinePhotos() {
-            const total = getTotalSlots();
-            const loaded = images.slice(0, total);
-            if (loaded.length !== total || loaded.some(img => !img)) return;
-
-            const ctx = previewCanvas.getContext('2d');
-            const border = hasBorder ? borderWidth : 0;
-
-            const isDiagonalCase = (total === 2 && useDiagonal);
-            const targetSize = getTargetCanvasSize(loaded, cols, rows, border, aspectRatio);
-
-            if (isDiagonalCase) {
-                // Diagonal split for 2 photos (user can choose direction)
-                const img0 = loaded[0];
-                const img1 = loaded[1];
-                let targetW, targetH;
-                if (targetSize) {
-                    // diagonal: the final photo is one rect split diagonally, matching the overall aspect
-                    targetW = targetSize.width;
-                    targetH = targetSize.height;
-                } else {
-                    targetW = Math.max(img0.width, img1.width);
-                    targetH = Math.max(img0.height, img1.height);
-                }
-
-                previewCanvas.width = targetW + border * 2;
-                previewCanvas.height = targetH + border * 2;
-
-                if (hasBorder) {
-                    ctx.fillStyle = borderColor;
-                    ctx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
-                }
-
-                const ix = border;
-                const iy = border;
-                const iw = targetW;
-                const ih = targetH;
-
-                // Line style
-                const lineW = border > 0 ? border : 4;
-                ctx.strokeStyle = border > 0 ? borderColor : '#ffffff';
-                ctx.lineWidth = lineW;
-
-                const dir = diagonalDirection;
-                const t0 = imageTransforms[0] || { scale: 1, panX: 0, panY: 0 };
-                const t1 = imageTransforms[1] || { scale: 1, panX: 0, panY: 0 };
-
-                // Helper to draw transformed image then clip
-                function drawTransformedClipped(img, t, clipPoints, linePoints) {
-                    const baseScale = Math.min(iw / img.width, ih / img.height) || 1;
-                    const ds = baseScale * t.scale;
-                    const dw = img.width * ds;
-                    const dh = img.height * ds;
-                    const dx = ix + (iw - dw) / 2 + t.panX;
-                    const dy = iy + (ih - dh) / 2 + t.panY;
-
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.moveTo(clipPoints[0][0], clipPoints[0][1]);
-                    ctx.lineTo(clipPoints[1][0], clipPoints[1][1]);
-                    ctx.lineTo(clipPoints[2][0], clipPoints[2][1]);
-                    ctx.closePath();
-                    ctx.clip();
-                    ctx.drawImage(img, dx, dy, dw, dh);
-                    ctx.restore();
-                }
-
-                if (dir === 'tlbr') {
-                    // \ 
-                    drawTransformedClipped(img0, t0, [[ix,iy], [ix+iw,iy+ih], [ix,iy+ih]]);
-                    drawTransformedClipped(img1, t1, [[ix,iy], [ix+iw,iy], [ix+iw,iy+ih]]);
-                    ctx.beginPath();
-                    ctx.moveTo(ix, iy);
-                    ctx.lineTo(ix + iw, iy + ih);
-                    ctx.stroke();
-                } else {
-                    // / 
-                    drawTransformedClipped(img0, t0, [[ix,iy], [ix+iw,iy], [ix,iy+ih]]);
-                    drawTransformedClipped(img1, t1, [[ix+iw,iy], [ix+iw,iy+ih], [ix,iy+ih]]);
-                    ctx.beginPath();
-                    ctx.moveTo(ix + iw, iy);
-                    ctx.lineTo(ix, iy + ih);
-                    ctx.stroke();
-                }
-            } else if (total === 2) {
-                // 2-photo non-diagonal: use cell layout + transforms (cell aspect when selected)
-                const img0 = loaded[0];
-                const img1 = loaded[1];
-                const isHorizontal = cols === 2;
-
-                let cellW, cellH, cTotalW, cTotalH;
-                if (targetSize) {
-                    const innerW = targetSize.width;
-                    const innerH = targetSize.height;
-                    cellW = innerW / cols;
-                    cellH = innerH / rows;
-                    cTotalW = innerW + (cols + 1) * border;
-                    cTotalH = innerH + (rows + 1) * border;
-                } else if (isHorizontal) {
-                    const th = Math.max(img0.height, img1.height);
-                    const w0 = img0.width * (th / img0.height);
-                    const w1 = img1.width * (th / img1.height);
-                    const innerW = w0 + w1;
-                    const innerH = th;
-                    cellW = innerW / 2;
-                    cellH = innerH;
-                    cTotalW = innerW + 3 * border;
-                    cTotalH = innerH + 2 * border;
-                } else {
-                    const tw = Math.max(img0.width, img1.width);
-                    const h0 = img0.height * (tw / img0.width);
-                    const h1 = img1.height * (tw / img1.width);
-                    const innerW = tw;
-                    const innerH = h0 + h1;
-                    cellW = innerW;
-                    cellH = innerH / 2;
-                    cTotalW = innerW + 2 * border;
-                    cTotalH = innerH + 3 * border;
-                }
-
-                previewCanvas.width = cTotalW;
-                previewCanvas.height = cTotalH;
-
-                if (hasBorder) {
-                    ctx.fillStyle = borderColor;
-                    ctx.fillRect(0, 0, cTotalW, cTotalH);
-                }
-
-                for (let i = 0; i < 2; i++) {
-                    const im = loaded[i];
-                    const t = imageTransforms[i] || { scale: 1, panX: 0, panY: 0 };
-                    const cx = border + (isHorizontal ? i * (cellW + border) : 0);
-                    const cy = border + (isHorizontal ? 0 : i * (cellH + border));
-                    const base = Math.min(cellW / im.width, cellH / im.height) || 1;
-                    const ds = base * t.scale;
-                    const dw = im.width * ds;
-                    const dh = im.height * ds;
-                    const dx = cx + (cellW - dw)/2 + t.panX;
-                    const dy = cy + (cellH - dh)/2 + t.panY;
-
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.rect(cx, cy, cellW, cellH);
-                    ctx.clip();
-                    ctx.drawImage(im, dx, dy, dw, dh);
-                    ctx.restore();
-                }
-            } else {
-                // General grid with transforms + optional forced aspect
-                let cellW, cellH, totalW, totalH;
-                if (targetSize) {
-                    const innerW = targetSize.width;
-                    const innerH = targetSize.height;
-                    cellW = innerW / cols;
-                    cellH = innerH / rows;
-                    totalW = innerW + (cols + 1) * border;
-                    totalH = innerH + (rows + 1) * border;
-                } else {
-                    cellW = 0; cellH = 0;
-                    for (const im of loaded) {
-                        cellW = Math.max(cellW, im.width);
-                        cellH = Math.max(cellH, im.height);
-                    }
-                    totalW = cols * cellW + (cols + 1) * border;
-                    totalH = rows * cellH + (rows + 1) * border;
-                }
-
-                previewCanvas.width = totalW;
-                previewCanvas.height = totalH;
-
-                if (hasBorder) {
-                    ctx.fillStyle = borderColor;
-                    ctx.fillRect(0, 0, totalW, totalH);
-                }
-
-                for (let i = 0; i < total; i++) {
-                    const r = Math.floor(i / cols);
-                    const c = i % cols;
-                    const cx = border + c * (cellW + border);
-                    const cy = border + r * (cellH + border);
-                    const im = loaded[i];
-                    const t = imageTransforms[i] || { scale: 1, panX: 0, panY: 0 };
-                    const base = Math.min(cellW / im.width, cellH / im.height) || 1;
-                    const ds = base * t.scale;
-                    const dw = im.width * ds;
-                    const dh = im.height * ds;
-                    const dx = cx + (cellW - dw)/2 + t.panX;
-                    const dy = cy + (cellH - dh)/2 + t.panY;
-
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.rect(cx, cy, cellW, cellH);
-                    ctx.clip();
-                    ctx.drawImage(im, dx, dy, dw, dh);
-                    ctx.restore();
-                }
-            }
-
-            // Show canvas, hide placeholder
-            placeholder.style.display = 'none';
-            previewCanvas.style.display = 'block';
-
-            downloadBtn.disabled = false;
-            copyBtn.disabled = false;
-        }
 
         // Download
         function downloadResult() {
@@ -1700,7 +1378,10 @@
             }
         });
 
-        // Initialize uploads and grid UI
+        // Keep the overlay aligned to the canvas as it scales with the viewport
+        window.addEventListener('resize', syncOverlay);
+
+        // Initialize overlay and grid UI
         function initGridUI() {
             if (gridSelect) gridSelect.value = `${cols},${rows}`;
             if (customCols) customCols.value = cols;
@@ -1708,8 +1389,8 @@
             if (aspectSelect) aspectSelect.value = aspectRatio;
             syncDiagonalDirectionUI();
             updateDiagonalVisibility();
-            renderUploads();
-            updatePlaceholderText();
+            buildOverlay();
+            updateUI();
         }
 
         initGridUI();
