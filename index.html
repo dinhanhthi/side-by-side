@@ -308,6 +308,16 @@
             color: white;
         }
 
+        .direction-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .direction-toggle.disabled {
+            opacity: 0.55;
+        }
+
         /* Grid layout */
         select {
             width: 100%;
@@ -705,6 +715,28 @@
                     </select>
                 </div>
 
+                <div class="control-group" id="frameOrderGroup" style="display:none;">
+                    <label>Frame order</label>
+                    <div class="direction-toggle" id="frameOrderToggle">
+                        <button type="button" class="direction-btn active" data-order="ltr" title="Left to right" disabled>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="4" width="8" height="16" rx="1.5" />
+                                <rect x="14" y="4" width="8" height="16" rx="1.5" />
+                                <path d="M9 12h6M13 9l3 3-3 3" />
+                            </svg>
+                            L → R
+                        </button>
+                        <button type="button" class="direction-btn" data-order="rtl" title="Right to left" disabled>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="4" width="8" height="16" rx="1.5" />
+                                <rect x="14" y="4" width="8" height="16" rx="1.5" />
+                                <path d="M15 12H9M11 9l-3 3 3 3" />
+                            </svg>
+                            R → L
+                        </button>
+                    </div>
+                </div>
+
                 <div class="control-group" id="diagonalGroup" style="display:none;">
                     <label class="checkbox-wrapper">
                         <input type="checkbox" id="diagonalToggle">
@@ -799,6 +831,7 @@
         let lastPastedSlot = null;
         let useDiagonal = false;
         let diagonalDirection = 'tlbr'; // 'tlbr' = top-left to bottom-right (\), 'trbl' = top-right to bottom-left (/)
+        let frameOrder = 'ltr'; // 'ltr' = left→right (default), 'rtl' = right→left
         let aspectRatio = 'auto';
         let hasBorder = false;
         let borderWidth = 0;
@@ -822,6 +855,8 @@
         const customCols = document.getElementById('customCols');
         const customRows = document.getElementById('customRows');
         const aspectSelect = document.getElementById('aspectSelect');
+        const frameOrderGroup = document.getElementById('frameOrderGroup');
+        const frameOrderToggle = document.getElementById('frameOrderToggle');
         const diagonalGroup = document.getElementById('diagonalGroup');
         const diagonalToggle = document.getElementById('diagonalToggle');
         const diagonalDirToggle = document.getElementById('diagonalDirToggle');
@@ -893,6 +928,11 @@
                     e.stopPropagation();
                     removeImage(i);
                 });
+
+                // Match visual position when frame order is reversed (2-slot only)
+                if (total === 2 && frameOrder === 'rtl') {
+                    cell.style.order = String(total - 1 - i);
+                }
 
                 attachCellInteractivity(cell, i);
                 cellOverlay.appendChild(cell);
@@ -1032,12 +1072,18 @@
             reader.readAsDataURL(blob);
         }
 
+        function hasAnyImage() {
+            const total = getTotalSlots();
+            return images.slice(0, total).some(img => !!img);
+        }
+
         function updateUI() {
             const total = getTotalSlots();
             const hasAll = images.slice(0, total).every(img => !!img);
             renderCanvas();
             downloadBtn.disabled = !hasAll;
             copyBtn.disabled = !hasAll;
+            updateFrameOrderEnabled();
         }
 
         // Compute the composition layout in target-canvas pixels.
@@ -1068,8 +1114,10 @@
             const cellH = innerH / rows;
             const cells = [];
             for (let i = 0; i < total; i++) {
-                const r = Math.floor(i / cols);
-                const c = i % cols;
+                // RTL reverses which screen position each slot occupies (2-frame only)
+                const pos = (total === 2 && frameOrder === 'rtl') ? (total - 1 - i) : i;
+                const r = Math.floor(pos / cols);
+                const c = pos % cols;
                 cells.push({
                     x: border + c * (cellW + border),
                     y: border + r * (cellH + border),
@@ -1117,6 +1165,8 @@
                     ? [ [[ix,iy],[ix+iw,iy+ih],[ix,iy+ih]], [[ix,iy],[ix+iw,iy],[ix+iw,iy+ih]] ]
                     : [ [[ix,iy],[ix+iw,iy],[ix,iy+ih]], [[ix+iw,iy],[ix+iw,iy+ih],[ix,iy+ih]] ];
                 for (let i = 0; i < 2; i++) {
+                    // Frame order swaps which photo lands in which triangle half
+                    const imgIndex = frameOrder === 'rtl' ? (1 - i) : i;
                     ctx.save();
                     ctx.beginPath();
                     ctx.moveTo(tris[i][0][0], tris[i][0][1]);
@@ -1126,7 +1176,7 @@
                     ctx.clip();
                     ctx.fillStyle = '#1a1a1e';
                     ctx.fillRect(ix, iy, iw, ih);
-                    if (images[i]) drawCellImage(ctx, images[i], L.cells[i], imageTransforms[i]);
+                    if (images[imgIndex]) drawCellImage(ctx, images[imgIndex], L.cells[i], imageTransforms[imgIndex]);
                     ctx.restore();
                 }
                 ctx.strokeStyle = hasBorder ? borderColor : 'rgba(255,255,255,0.85)';
@@ -1189,6 +1239,7 @@
             // Cell geometry changed → reset pan/zoom so photos re-fit cleanly (no jump)
             resetTransforms();
 
+            updateFrameOrderVisibility();
             updateDiagonalVisibility();
             buildOverlay();
             updateUI();
@@ -1197,6 +1248,33 @@
         // Reset every loaded photo's pan/zoom to the default cover-fit
         function resetTransforms() {
             imageTransforms = images.map(im => im ? { scale: 1, panX: 0, panY: 0 } : null);
+        }
+
+        function updateFrameOrderVisibility() {
+            const isTwo = getTotalSlots() === 2;
+            if (frameOrderGroup) {
+                frameOrderGroup.style.display = isTwo ? 'block' : 'none';
+            }
+            if (isTwo) {
+                syncFrameOrderUI();
+                updateFrameOrderEnabled();
+            }
+        }
+
+        function syncFrameOrderUI() {
+            if (!frameOrderToggle) return;
+            frameOrderToggle.querySelectorAll('.direction-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.order === frameOrder);
+            });
+        }
+
+        function updateFrameOrderEnabled() {
+            if (!frameOrderToggle) return;
+            const enabled = getTotalSlots() === 2 && hasAnyImage();
+            frameOrderToggle.classList.toggle('disabled', !enabled);
+            frameOrderToggle.querySelectorAll('.direction-btn').forEach(btn => {
+                btn.disabled = !enabled;
+            });
         }
 
         function updateDiagonalVisibility() {
@@ -1260,6 +1338,22 @@
                     diagonalDirSection.style.display = useDiagonal ? 'block' : 'none';
                 }
                 updateUI();
+            });
+        }
+
+        // Frame order buttons (2-slot L→R / R→L)
+        if (frameOrderToggle) {
+            frameOrderToggle.querySelectorAll('.direction-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (btn.disabled) return;
+                    const next = btn.dataset.order;
+                    if (next === frameOrder) return;
+                    frameOrder = next;
+                    syncFrameOrderUI();
+                    // Rebuild overlay so cell order matches canvas positions
+                    buildOverlay();
+                    updateUI();
+                });
             });
         }
 
@@ -1421,6 +1515,8 @@
             if (customCols) customCols.value = cols;
             if (customRows) customRows.value = rows;
             if (aspectSelect) aspectSelect.value = aspectRatio;
+            syncFrameOrderUI();
+            updateFrameOrderVisibility();
             syncDiagonalDirectionUI();
             updateDiagonalVisibility();
             buildOverlay();
