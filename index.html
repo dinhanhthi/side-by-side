@@ -149,6 +149,28 @@
             transition: border-color 0.2s ease, background 0.2s ease;
         }
 
+        .overlay-cell.frame-left {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+            border-right-color: transparent;
+        }
+
+        .overlay-cell.frame-right {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+            border-left-color: transparent;
+        }
+
+        .overlay-cell.frame-left:hover,
+        .overlay-cell.frame-left.drag-over {
+            border-right-color: transparent;
+        }
+
+        .overlay-cell.frame-right:hover,
+        .overlay-cell.frame-right.drag-over {
+            border-left-color: transparent;
+        }
+
         .overlay-cell:hover {
             border-color: var(--primary);
             background: rgba(99, 102, 241, 0.08);
@@ -882,6 +904,11 @@
                 cell.className = 'overlay-cell';
                 if (images[i]) cell.classList.add('has-image');
 
+                if (total === 2 && !useDiagonal) {
+                    const visualPosition = frameOrder === 'rtl' ? total - 1 - i : i;
+                    cell.classList.add(visualPosition === 0 ? 'frame-left' : 'frame-right');
+                }
+
                 cell.innerHTML = `
                     <input type="file" accept="image/*">
                     <div class="upload-content">
@@ -1439,7 +1466,8 @@
         function downloadResult() {
             if (downloadBtn.disabled) return;
             const link = document.createElement('a');
-            link.download = 'combined-photo.png';
+            const suffix = Math.random().toString(36).slice(2, 7);
+            link.download = `combined-photo-${suffix}.png`;
             link.href = previewCanvas.toDataURL('image/png');
             link.click();
         }
