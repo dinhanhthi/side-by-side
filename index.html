@@ -262,6 +262,40 @@
             transform: scale(1.1);
         }
 
+        .zoom-controls {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            display: none;
+            gap: 4px;
+            z-index: 2;
+        }
+
+        .overlay-cell.has-image .zoom-controls {
+            display: flex;
+        }
+
+        .zoom-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 1rem;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease, transform 0.15s ease;
+        }
+
+        .zoom-btn:hover {
+            background: rgba(99, 102, 241, 0.9);
+            transform: scale(1.1);
+        }
+
         /* Controls Panel */
         .controls-panel {
             background: var(--surface);
@@ -923,6 +957,10 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
+                    <div class="zoom-controls">
+                        <button class="zoom-btn" type="button" data-zoom="out" aria-label="Zoom out photo ${i + 1}" title="Zoom out">&minus;</button>
+                        <button class="zoom-btn" type="button" data-zoom="in" aria-label="Zoom in photo ${i + 1}" title="Zoom in">+</button>
+                    </div>
                 `;
 
                 const fileInput = cell.querySelector('input[type="file"]');
@@ -995,6 +1033,25 @@
                 return t;
             };
 
+            // Same math as the wheel handler with the anchor at the cell centre.
+            const zoomBy = (factor) => {
+                if (!images[index]) return;
+                const t = ensureT();
+                const newScale = Math.max(0.15, Math.min(10, t.scale * factor));
+                const ratio = newScale / t.scale;
+                t.panX *= ratio;
+                t.panY *= ratio;
+                t.scale = newScale;
+                renderCanvas();
+            };
+
+            cell.querySelectorAll('.zoom-btn').forEach((btn) => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    zoomBy(btn.dataset.zoom === 'in' ? 1.05 : 1 / 1.05);
+                });
+            });
+
             cell.addEventListener('wheel', (e) => {
                 if (!images[index] || !currentLayout) return;
                 e.preventDefault();
@@ -1031,7 +1088,7 @@
             };
             cell.addEventListener('mousedown', (e) => {
                 if (e.button !== 0 || !images[index]) return;
-                if (e.target.closest('.remove-image-btn')) return;
+                if (e.target.closest('.remove-image-btn') || e.target.closest('.zoom-btn')) return;
                 const t = ensureT();
                 dragging = true;
                 sx = e.clientX; sy = e.clientY; spx = t.panX; spy = t.panY;
@@ -1041,6 +1098,7 @@
             });
             cell.addEventListener('dblclick', (e) => {
                 if (!images[index]) return;
+                if (e.target.closest('.zoom-btn')) return;
                 e.stopPropagation();
                 imageTransforms[index] = { scale: 1, panX: 0, panY: 0 };
                 renderCanvas();
