@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Side by Side - Photo Combiner</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tippy.js@6.3.7/dist/tippy.css" integrity="sha256-WWn0l9kVjXaC+CGcbxP6Zyac31v1Cjkx2VMnFR3uVng=" crossorigin="anonymous">
     <style>
         * {
             margin: 0;
@@ -302,6 +303,18 @@
         .zoom-btn svg {
             width: 14px;
             height: 14px;
+        }
+
+        .zoom-sep {
+            width: 1px;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.35);
+            margin: 0 2px;
+            align-self: center;
+        }
+
+        .zoom-btn.copied {
+            background: rgba(16, 185, 129, 0.9);
         }
 
         /* Controls Panel */
@@ -732,6 +745,37 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        .tippy-box[data-theme~='sbs'] {
+            background: #18181b;
+            color: #fafafa;
+            border: 1px solid #3f3f46;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            line-height: 1.3;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+        }
+
+        .tippy-box[data-theme~='sbs'] .tippy-content {
+            padding: 0.35rem 0.55rem;
+        }
+
+        .tippy-box[data-theme~='sbs'][data-placement^='top'] > .tippy-arrow::before {
+            border-top-color: #18181b;
+        }
+
+        .tippy-box[data-theme~='sbs'][data-placement^='bottom'] > .tippy-arrow::before {
+            border-bottom-color: #18181b;
+        }
+
+        .tippy-box[data-theme~='sbs'][data-placement^='left'] > .tippy-arrow::before {
+            border-left-color: #18181b;
+        }
+
+        .tippy-box[data-theme~='sbs'][data-placement^='right'] > .tippy-arrow::before {
+            border-right-color: #18181b;
+        }
+
     </style>
 </head>
 <body>
@@ -739,7 +783,7 @@
         <header>
             <div class="header-title">
                 <h1>Side by Side</h1>
-                <a href="https://github.com/dinhanhthi/side-by-side" target="_blank" rel="noopener noreferrer" class="github-link" aria-label="View source on GitHub" title="View on GitHub">
+                <a href="https://github.com/dinhanhthi/side-by-side" target="_blank" rel="noopener noreferrer" class="github-link" aria-label="View source on GitHub" data-tippy-content="View on GitHub">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
                 </a>
             </div>
@@ -802,7 +846,7 @@
                 <div class="control-group" id="frameOrderGroup" style="display:none;">
                     <label>Frame order</label>
                     <div class="direction-toggle" id="frameOrderToggle">
-                        <button type="button" class="direction-btn active" data-order="ltr" title="Left to right" disabled>
+                        <button type="button" class="direction-btn active" data-order="ltr" data-tippy-content="Left to right" disabled>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="2" y="4" width="8" height="16" rx="1.5" />
                                 <rect x="14" y="4" width="8" height="16" rx="1.5" />
@@ -810,7 +854,7 @@
                             </svg>
                             L → R
                         </button>
-                        <button type="button" class="direction-btn" data-order="rtl" title="Right to left" disabled>
+                        <button type="button" class="direction-btn" data-order="rtl" data-tippy-content="Right to left" disabled>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="2" y="4" width="8" height="16" rx="1.5" />
                                 <rect x="14" y="4" width="8" height="16" rx="1.5" />
@@ -835,13 +879,13 @@
                     <div id="diagonalDirSection" style="margin-top: 0.4rem; display: none;">
                         <label style="font-size: 0.68rem; color: var(--text-muted); display: block; margin-bottom: 0.2rem;">Direction</label>
                         <div class="direction-toggle" id="diagonalDirToggle">
-                            <button class="direction-btn active" data-diag="tlbr" title="Top-left to bottom-right">
+                            <button class="direction-btn active" data-diag="tlbr" data-tippy-content="Top-left to bottom-right">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
                                     <rect x="2" y="2" width="20" height="20" rx="3" />
                                     <line x1="5" y1="5" x2="19" y2="19" />
                                 </svg>
                             </button>
-                            <button class="direction-btn" data-diag="trbl" title="Top-right to bottom-left">
+                            <button class="direction-btn" data-diag="trbl" data-tippy-content="Top-right to bottom-left">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
                                     <rect x="2" y="2" width="20" height="20" rx="3" />
                                     <line x1="19" y1="5" x2="5" y2="19" />
@@ -885,7 +929,7 @@
                 </div>
 
                 <div class="control-group">
-                    <label class="checkbox-wrapper" title="When photos don't fill the frame, trim unused edges on download or copy">
+                    <label class="checkbox-wrapper" data-tippy-content="When photos don't fill the frame, trim unused edges on download or copy">
                         <input type="checkbox" id="cropEmptyToggle">
                         <span class="checkbox-custom">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -898,7 +942,7 @@
                 </div>
 
                 <div class="panel-actions">
-                    <button class="btn btn-success" id="downloadBtn" disabled>
+                    <button class="btn btn-success" id="downloadBtn" data-tippy-content="Download the combined photo" disabled>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                         </svg>
@@ -906,7 +950,7 @@
                         <kbd class="shortcut-hint" id="shortcutHint">⌘D</kbd>
                     </button>
 
-                    <button class="btn btn-secondary" id="copyBtn" disabled>
+                    <button class="btn btn-secondary" id="copyBtn" data-tippy-content="Copy the combined photo" disabled>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                         </svg>
@@ -921,6 +965,8 @@
         </footer>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha256-whL0tQWoY1Ku1iskqPFvmZ+CHsvmRWx/PIoEvIeWh4I=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tippy.js@6.3.7/dist/tippy.umd.min.js" integrity="sha256-qx7gQMlSzXvTJCl8PBcHyzDQLGvX7NaFbiFY44WpsW4=" crossorigin="anonymous"></script>
     <script>
         // State
         let images = [null, null];
@@ -963,6 +1009,34 @@
         const diagonalDirSection = document.getElementById('diagonalDirSection');
         const cropEmptyToggle = document.getElementById('cropEmptyToggle');
 
+        function setTip(el, text) {
+            if (!el) return;
+            el.setAttribute('data-tippy-content', text);
+            if (el._tippy) el._tippy.setContent(text);
+        }
+
+        function destroyTips(root) {
+            if (!root) return;
+            root.querySelectorAll('[data-tippy-content]').forEach((el) => {
+                if (el._tippy) el._tippy.destroy();
+            });
+        }
+
+        if (typeof tippy === 'function' && tippy.delegate) {
+            tippy.delegate(document.body, {
+                target: '[data-tippy-content]',
+                theme: 'sbs',
+                delay: [60, 0],
+                duration: [100, 80],
+                arrow: true,
+                appendTo: () => document.body,
+                zIndex: 9999,
+                allowHTML: false,
+                touch: false,
+                animation: 'fade',
+            });
+        }
+
         function getTotalSlots() {
             return cols * rows;
         }
@@ -976,6 +1050,7 @@
             cellOverlay.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
             cellOverlay.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))`;
             cellOverlay.classList.toggle('dense', total > 4);
+            destroyTips(cellOverlay);
             cellOverlay.innerHTML = '';
 
             for (let i = 0; i < total; i++) {
@@ -997,38 +1072,49 @@
                         <p class="label">Photo ${i + 1}</p>
                         <p>Click, drag, or paste</p>
                     </div>
-                    <button class="remove-image-btn" type="button" data-index="${i}" aria-label="Remove photo ${i + 1}" title="Remove photo">
+                    <button class="remove-image-btn" type="button" data-index="${i}" aria-label="Remove photo ${i + 1}" data-tippy-content="Remove photo" data-tippy-placement="bottom">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                     <div class="zoom-controls">
-                        <button class="zoom-btn" type="button" data-zoom="out" aria-label="Zoom out photo ${i + 1}" title="Zoom out">&minus;</button>
-                        <button class="zoom-btn" type="button" data-zoom="in" aria-label="Zoom in photo ${i + 1}" title="Zoom in">+</button>
-                        <button class="zoom-btn" type="button" data-flip="h" aria-label="Flip photo ${i + 1} horizontally" title="Flip horizontal">
+                        <button class="zoom-btn" type="button" data-zoom="out" aria-label="Zoom out photo ${i + 1}" data-tippy-content="Zoom out">&minus;</button>
+                        <button class="zoom-btn" type="button" data-zoom="in" aria-label="Zoom in photo ${i + 1}" data-tippy-content="Zoom in">+</button>
+                        <button class="zoom-btn" type="button" data-flip="h" aria-label="Flip photo ${i + 1} horizontally" data-tippy-content="Flip horizontal">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M8 7 4 12l4 5"/>
                                 <path d="m16 7 4 5-4 5"/>
                                 <path d="M12 4v16"/>
                             </svg>
                         </button>
-                        <button class="zoom-btn" type="button" data-flip="v" aria-label="Flip photo ${i + 1} vertically" title="Flip vertical">
+                        <button class="zoom-btn" type="button" data-flip="v" aria-label="Flip photo ${i + 1} vertically" data-tippy-content="Flip vertical">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="m7 8 5-4 5 4"/>
                                 <path d="m7 16 5 4 5-4"/>
                                 <path d="M4 12h16"/>
                             </svg>
                         </button>
-                        <button class="zoom-btn" type="button" data-rotate="ccw" aria-label="Rotate photo ${i + 1} anti-clockwise" title="Rotate anti-clockwise">
+                        <button class="zoom-btn" type="button" data-rotate="ccw" aria-label="Rotate photo ${i + 1} anti-clockwise" data-tippy-content="Rotate anti-clockwise">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
                                 <path d="M3 3v5h5"/>
                             </svg>
                         </button>
-                        <button class="zoom-btn" type="button" data-rotate="cw" aria-label="Rotate photo ${i + 1} clockwise" title="Rotate clockwise">
+                        <button class="zoom-btn" type="button" data-rotate="cw" aria-label="Rotate photo ${i + 1} clockwise" data-tippy-content="Rotate clockwise">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
                                 <path d="M21 3v5h-5"/>
+                            </svg>
+                        </button>
+                        <span class="zoom-sep" aria-hidden="true"></span>
+                        <button class="zoom-btn" type="button" data-export="download" aria-label="Download photo ${i + 1}" data-tippy-content="Download photo">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                        </button>
+                        <button class="zoom-btn" type="button" data-export="copy" aria-label="Copy photo ${i + 1}" data-tippy-content="Copy photo">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                             </svg>
                         </button>
                     </div>
@@ -1144,6 +1230,22 @@
                     renderCanvas();
                 });
             });
+
+            const downloadPhotoBtn = cell.querySelector('[data-export="download"]');
+            if (downloadPhotoBtn) {
+                downloadPhotoBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    downloadCellImage(index);
+                });
+            }
+
+            const copyPhotoBtn = cell.querySelector('[data-export="copy"]');
+            if (copyPhotoBtn) {
+                copyPhotoBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    copyCellImage(index, copyPhotoBtn);
+                });
+            }
 
             cell.addEventListener('wheel', (e) => {
                 if (!images[index] || !currentLayout) return;
@@ -1450,6 +1552,92 @@
                 );
             }
             return out;
+        }
+
+        // Rasterize one slot as currently framed (zoom / pan / flip / rotate + cell clip).
+        function buildCellExportCanvas(index) {
+            const img = images[index];
+            if (!img) return null;
+            const L = currentLayout || computeLayout();
+            const rect = L.cells[index];
+            if (!rect || rect.w < 1 || rect.h < 1) return null;
+
+            const t = imageTransforms[index];
+            let cropX = 0, cropY = 0, cropW = rect.w, cropH = rect.h;
+            if (cropEmptyEdges) {
+                const ins = getCellContentInsets(img, rect, t);
+                const trimL = ceilInset(ins.left);
+                const trimT = ceilInset(ins.top);
+                const trimR = ceilInset(ins.right);
+                const trimB = ceilInset(ins.bottom);
+                cropX = trimL;
+                cropY = trimT;
+                cropW = Math.floor(rect.w - trimL - trimR);
+                cropH = Math.floor(rect.h - trimT - trimB);
+                if (cropW < 1 || cropH < 1) return null;
+            }
+
+            const out = document.createElement('canvas');
+            out.width = Math.max(1, Math.round(cropW));
+            out.height = Math.max(1, Math.round(cropH));
+            const ctx = out.getContext('2d');
+            ctx.save();
+            ctx.translate(-rect.x - cropX, -rect.y - cropY);
+            ctx.beginPath();
+            ctx.rect(rect.x, rect.y, rect.w, rect.h);
+            ctx.clip();
+            drawCellImage(ctx, img, rect, t);
+            ctx.restore();
+            return out;
+        }
+
+        function downloadCellImage(index) {
+            const canvas = buildCellExportCanvas(index);
+            if (!canvas) return;
+            const link = document.createElement('a');
+            const suffix = Math.random().toString(36).slice(2, 7);
+            link.download = `photo-${index + 1}-${suffix}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        const cellCopyTimeouts = new WeakMap();
+
+        async function copyCellImage(index, btn) {
+            const canvas = buildCellExportCanvas(index);
+            if (!canvas) return;
+            const defaultTitle = 'Copy photo';
+            try {
+                const blob = await new Promise((resolve, reject) => {
+                    canvas.toBlob((result) => {
+                        if (result) resolve(result);
+                        else reject(new Error('Failed to create image blob'));
+                    }, 'image/png');
+                });
+                await navigator.clipboard.write([
+                    new ClipboardItem({ 'image/png': blob })
+                ]);
+                if (btn) {
+                    btn.classList.add('copied');
+                    setTip(btn, 'Copied!');
+                    clearTimeout(cellCopyTimeouts.get(btn));
+                    const tid = setTimeout(() => {
+                        btn.classList.remove('copied');
+                        setTip(btn, defaultTitle);
+                    }, 2000);
+                    cellCopyTimeouts.set(btn, tid);
+                }
+            } catch (err) {
+                console.error('Failed to copy photo:', err);
+                if (btn) {
+                    setTip(btn, 'Copy failed');
+                    clearTimeout(cellCopyTimeouts.get(btn));
+                    const tid = setTimeout(() => {
+                        setTip(btn, defaultTitle);
+                    }, 2000);
+                    cellCopyTimeouts.set(btn, tid);
+                }
+            }
         }
 
         let currentLayout = null;
@@ -1783,16 +1971,20 @@
                 ]);
 
                 copyBtnLabel.textContent = 'Copied!';
+                setTip(copyBtn, 'Copied!');
                 clearTimeout(copyFeedbackTimeout);
                 copyFeedbackTimeout = setTimeout(() => {
                     copyBtnLabel.textContent = 'Copy';
+                    setTip(copyBtn, 'Copy the combined photo');
                 }, 2000);
             } catch (err) {
                 console.error('Failed to copy image:', err);
                 copyBtnLabel.textContent = 'Copy failed';
+                setTip(copyBtn, 'Copy failed');
                 clearTimeout(copyFeedbackTimeout);
                 copyFeedbackTimeout = setTimeout(() => {
                     copyBtnLabel.textContent = 'Copy';
+                    setTip(copyBtn, 'Copy the combined photo');
                 }, 2000);
             }
         }
