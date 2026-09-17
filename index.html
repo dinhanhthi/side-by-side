@@ -4,797 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Side by Side - Photo Combiner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tippy.js@6.3.7/dist/tippy.css" integrity="sha256-WWn0l9kVjXaC+CGcbxP6Zyac31v1Cjkx2VMnFR3uVng=" crossorigin="anonymous">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary: #6366f1;
-            --primary-hover: #4f46e5;
-            --bg: #0f0f11;
-            --surface: #18181b;
-            --surface-2: #27272a;
-            --border: #3f3f46;
-            --text: #fafafa;
-            --text-muted: #a1a1aa;
-            --success: #22c55e;
-            --radius: 12px;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 0.5rem;
-        }
-
-        .subtitle {
-            color: var(--text-muted);
-            font-size: 1.1rem;
-        }
-
-        .header-title {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.6rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .header-title h1 {
-            margin-bottom: 0;
-        }
-
-        .github-link {
-            display: inline-flex;
-            align-items: center;
-            color: var(--text-muted);
-            transition: color 0.2s ease;
-            text-decoration: none;
-        }
-
-        .github-link:hover {
-            color: var(--text);
-        }
-
-        .github-link svg {
-            width: 22px;
-            height: 22px;
-        }
-
-        .main-grid {
-            display: grid;
-            grid-template-columns: 1fr 260px;
-            gap: 1.25rem;
-        }
-
-        @media (max-width: 900px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Editor stage: the canvas is the single preview surface; a transparent
-           grid overlay on top of it handles upload / drag / paste / pan-zoom. */
-        .workspace {
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-        }
-
-        .editor-stage {
-            position: relative;
-            display: inline-block;
-            max-width: 100%;
-            line-height: 0;
-        }
-
-        #previewCanvas {
-            display: block;
-            width: auto;
-            height: auto;
-            max-width: 100%;
-            max-height: 72vh;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            animation: fadeIn 0.3s ease;
-        }
-
-        .cell-overlay {
-            position: absolute;
-            inset: 0;
-            display: grid;
-            box-sizing: border-box;
-        }
-
-        .overlay-cell {
-            position: relative;
-            min-width: 0;
-            min-height: 0;
-            border: 2px dashed var(--border);
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 0.5rem;
-            cursor: pointer;
-            overflow: hidden;
-            transition: border-color 0.2s ease, background 0.2s ease;
-        }
-
-        .overlay-cell.frame-left {
-            border-top-right-radius: 0;
-            border-bottom-right-radius: 0;
-            border-right-color: transparent;
-        }
-
-        .overlay-cell.frame-right {
-            border-top-left-radius: 0;
-            border-bottom-left-radius: 0;
-            border-left-color: transparent;
-        }
-
-        .overlay-cell.frame-left:hover,
-        .overlay-cell.frame-left.drag-over {
-            border-right-color: transparent;
-        }
-
-        .overlay-cell.frame-right:hover,
-        .overlay-cell.frame-right.drag-over {
-            border-left-color: transparent;
-        }
-
-        .overlay-cell:hover {
-            border-color: var(--primary);
-            background: rgba(99, 102, 241, 0.08);
-        }
-
-        .overlay-cell.has-image {
-            border-color: transparent;
-            background: transparent;
-            cursor: grab;
-        }
-
-        .overlay-cell.has-image:active {
-            cursor: grabbing;
-        }
-
-        .overlay-cell.drag-over {
-            border-color: var(--primary);
-            background: rgba(99, 102, 241, 0.15);
-        }
-
-        .overlay-cell input {
-            display: none;
-        }
-
-        .overlay-cell .upload-icon {
-            width: 36px;
-            height: 36px;
-            color: var(--text-muted);
-            margin-bottom: 0.5rem;
-        }
-
-        .overlay-cell p {
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            line-height: 1.15;
-        }
-
-        .overlay-cell .label {
-            font-weight: 600;
-            color: var(--text);
-            margin-bottom: 0.15rem;
-            font-size: 0.85rem;
-        }
-
-        .overlay-cell.has-image .upload-content {
-            display: none;
-        }
-
-        .cell-overlay.dense .upload-icon {
-            width: 22px;
-            height: 22px;
-            margin-bottom: 0.2rem;
-        }
-
-        .cell-overlay.dense .label,
-        .cell-overlay.dense p {
-            font-size: 0.65rem;
-        }
-
-        .remove-image-btn {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            width: 28px;
-            height: 28px;
-            border: none;
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            cursor: pointer;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 2;
-            transition: background 0.2s ease, transform 0.15s ease;
-        }
-
-        .remove-image-btn svg {
-            width: 14px;
-            height: 14px;
-        }
-
-        .overlay-cell.has-image .remove-image-btn {
-            display: flex;
-        }
-
-        .remove-image-btn:hover {
-            background: rgba(239, 68, 68, 0.9);
-            transform: scale(1.1);
-        }
-
-        .zoom-controls {
-            position: absolute;
-            bottom: 8px;
-            right: 8px;
-            display: none;
-            gap: 4px;
-            z-index: 2;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-            max-width: calc(100% - 16px);
-        }
-
-        .overlay-cell.has-image .zoom-controls {
-            display: flex;
-        }
-
-        .zoom-btn {
-            width: 28px;
-            height: 28px;
-            border: none;
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            font-size: 1rem;
-            line-height: 1;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s ease, transform 0.15s ease;
-        }
-
-        .zoom-btn:hover {
-            background: rgba(99, 102, 241, 0.9);
-            transform: scale(1.1);
-        }
-
-        .zoom-btn svg {
-            width: 14px;
-            height: 14px;
-        }
-
-        .zoom-sep {
-            width: 1px;
-            height: 18px;
-            background: rgba(255, 255, 255, 0.35);
-            margin: 0 2px;
-            align-self: center;
-        }
-
-        .zoom-btn.copied {
-            background: rgba(16, 185, 129, 0.9);
-        }
-
-        .zoom-btn.active {
-            background: rgba(99, 102, 241, 0.95);
-        }
-
-        /* Controls Panel */
-        .controls-panel {
-            background: var(--surface);
-            border-radius: 10px;
-            padding: 0.9rem;
-            height: fit-content;
-        }
-
-        .controls-panel h2 {
-            font-size: 0.8rem;
-            font-weight: 600;
-            letter-spacing: 0.02em;
-            margin-bottom: 0.7rem;
-            display: flex;
-            align-items: center;
-            gap: 0.35rem;
-        }
-
-        .controls-panel h2 svg {
-            width: 14px;
-            height: 14px;
-        }
-
-        .control-group {
-            margin-bottom: 0.75rem;
-        }
-
-        .control-group:last-of-type {
-            margin-bottom: 0.85rem;
-        }
-
-        .control-group > label {
-            display: block;
-            font-size: 0.7rem;
-            font-weight: 500;
-            margin-bottom: 0.3rem;
-            color: var(--text-muted);
-        }
-
-        /* Direction Toggle */
-        .direction-toggle {
-            display: flex;
-            background: var(--surface-2);
-            border-radius: 6px;
-            padding: 2px;
-        }
-
-        .direction-btn {
-            flex: 1;
-            padding: 0.35rem 0.4rem;
-            border: none;
-            background: transparent;
-            color: var(--text-muted);
-            cursor: pointer;
-            border-radius: 4px;
-            font-size: 0.72rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.3rem;
-        }
-
-        .direction-btn svg {
-            width: 13px;
-            height: 13px;
-        }
-
-        .direction-btn.active {
-            background: var(--primary);
-            color: white;
-        }
-
-        .direction-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-
-        .direction-toggle.disabled {
-            opacity: 0.55;
-        }
-
-        /* Grid layout */
-        select {
-            width: 100%;
-            padding: 0.35rem 0.45rem;
-            background: var(--surface-2);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--text);
-            font-size: 0.75rem;
-            cursor: pointer;
-        }
-
-        select:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .custom-grid {
-            display: flex;
-            align-items: center;
-            gap: 0.35rem;
-            margin-top: 0.35rem;
-        }
-
-        .custom-grid input[type="number"] {
-            width: 42px;
-            padding: 0.25rem 0.3rem;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            color: var(--text);
-            font-size: 0.75rem;
-            text-align: center;
-        }
-
-        .custom-grid span {
-            color: var(--text-muted);
-            font-size: 0.75rem;
-        }
-
-        /* Checkbox - label.checkbox-wrapper so it overrides .control-group > label { display: block } */
-        label.checkbox-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 0.45rem;
-            cursor: pointer;
-        }
-
-        .checkbox-wrapper input {
-            display: none;
-        }
-
-        .checkbox-custom {
-            width: 15px;
-            height: 15px;
-            border: 1.5px solid var(--border);
-            border-radius: 3px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            flex-shrink: 0;
-        }
-
-        .checkbox-wrapper input:checked + .checkbox-custom {
-            background: var(--primary);
-            border-color: var(--primary);
-        }
-
-        .checkbox-custom svg {
-            width: 10px;
-            height: 10px;
-            color: white;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-        }
-
-        .checkbox-wrapper input:checked + .checkbox-custom svg {
-            opacity: 1;
-        }
-
-        .checkbox-label {
-            font-size: 0.75rem;
-        }
-
-        .export-hint {
-            margin: 0.2rem 0 0 1.4rem;
-            font-size: 0.65rem;
-            color: var(--text-muted);
-            line-height: 1.3;
-        }
-
-        /* Border Options */
-        .border-options {
-            margin-top: 0.5rem;
-            padding: 0.55rem 0.6rem;
-            background: var(--surface-2);
-            border-radius: 6px;
-            display: none;
-        }
-
-        .border-options.visible {
-            display: block;
-        }
-
-        .border-row {
-            display: flex;
-            gap: 0.6rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .border-row:last-child {
-            margin-bottom: 0;
-        }
-
-        .border-field {
-            flex: 1;
-        }
-
-        .border-field label {
-            font-size: 0.68rem;
-            margin-bottom: 0.2rem;
-            display: block;
-            color: var(--text-muted);
-        }
-
-        /* Slider */
-        .slider-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        input[type="range"] {
-            flex: 1;
-            height: 4px;
-            -webkit-appearance: none;
-            appearance: none;
-            background: linear-gradient(to right, var(--primary) 0%, var(--primary) var(--progress, 10%), var(--bg) var(--progress, 10%), var(--bg) 100%);
-            border-radius: 2px;
-            outline: none;
-            cursor: pointer;
-        }
-
-        input[type="range"]::-webkit-slider-runnable-track {
-            height: 4px;
-            border-radius: 2px;
-        }
-
-        input[type="range"]::-moz-range-track {
-            height: 4px;
-            background: var(--bg);
-            border-radius: 2px;
-        }
-
-        input[type="range"]::-moz-range-progress {
-            background: var(--primary);
-            height: 4px;
-            border-radius: 2px;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 13px;
-            height: 13px;
-            margin-top: -4.5px;
-            background: white;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
-        }
-
-        input[type="range"]::-webkit-slider-thumb:hover {
-            transform: scale(1.15);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-        }
-
-        input[type="range"]::-moz-range-thumb {
-            width: 13px;
-            height: 13px;
-            background: white;
-            border-radius: 50%;
-            cursor: pointer;
-            border: none;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-        }
-
-        .slider-value {
-            min-width: 36px;
-            padding: 0.15rem 0.3rem;
-            text-align: center;
-            font-size: 0.68rem;
-            color: var(--text);
-            font-family: monospace;
-            background: var(--bg);
-            border-radius: 4px;
-        }
-
-        .color-input-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            padding: 0.25rem 0.45rem;
-            border: 1px solid var(--border);
-            border-radius: 5px;
-            background: var(--bg);
-        }
-
-        input[type="color"] {
-            width: 20px;
-            height: 20px;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            background: none;
-        }
-
-        input[type="color"]::-webkit-color-swatch-wrapper {
-            padding: 0;
-        }
-
-        input[type="color"]::-webkit-color-swatch {
-            border: none;
-            border-radius: 4px;
-        }
-
-        .color-hex {
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            font-family: monospace;
-        }
-
-        /* Buttons */
-        .btn {
-            width: 100%;
-            padding: 0.5rem 0.6rem;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.78rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.35rem;
-        }
-
-        .btn svg {
-            width: 14px;
-            height: 14px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
-            color: white;
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .btn-success {
-            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-            color: white;
-            margin-top: 0;
-        }
-
-        .btn-success:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(34, 197, 94, 0.4);
-        }
-
-        .btn-success:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .panel-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 0.35rem;
-        }
-
-        .btn-secondary {
-            background: var(--surface-2);
-            color: var(--text);
-            border: 1px solid var(--border);
-            margin-top: 0;
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-            background: var(--border);
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .shortcut-hint {
-            margin-left: 0.15rem;
-            padding: 0.1rem 0.28rem;
-            font-size: 0.62rem;
-            font-family: inherit;
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 3px;
-            opacity: 0.8;
-        }
-
-        /* Footer */
-        footer {
-            text-align: center;
-            margin-top: 3rem;
-            padding-top: 2rem;
-            border-top: 1px solid var(--border);
-            color: var(--text-muted);
-            font-size: 0.85rem;
-        }
-
-        footer a {
-            color: var(--primary);
-            text-decoration: none;
-        }
-
-        footer a:hover {
-            text-decoration: underline;
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .tippy-box[data-theme~='sbs'] {
-            background: #18181b;
-            color: #fafafa;
-            border: 1px solid #3f3f46;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            line-height: 1.3;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-        }
-
-        .tippy-box[data-theme~='sbs'] .tippy-content {
-            padding: 0.35rem 0.55rem;
-        }
-
-        .tippy-box[data-theme~='sbs'][data-placement^='top'] > .tippy-arrow::before {
-            border-top-color: #18181b;
-        }
-
-        .tippy-box[data-theme~='sbs'][data-placement^='bottom'] > .tippy-arrow::before {
-            border-bottom-color: #18181b;
-        }
-
-        .tippy-box[data-theme~='sbs'][data-placement^='left'] > .tippy-arrow::before {
-            border-left-color: #18181b;
-        }
-
-        .tippy-box[data-theme~='sbs'][data-placement^='right'] > .tippy-arrow::before {
-            border-right-color: #18181b;
-        }
-
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="header-title">
-                <h1>Side by Side</h1>
-                <a href="https://github.com/dinhanhthi/side-by-side" target="_blank" rel="noopener noreferrer" class="github-link" aria-label="View source on GitHub" data-tippy-content="View on GitHub">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                </a>
-            </div>
-            <p class="subtitle">Combine any number of photos in flexible grids (2×1, 2×2, 3×3, or custom) with live editing. 100% offline, runs entirely in your browser.</p>
+    <div class="shell">
+        <header class="nav-edge">
+            <a class="wordmark" href="./">
+                <img class="wordmark-mark" src="logo.png" alt="" width="28" height="28">
+                <span class="wordmark-title">Side by Side</span>
+            </a>
+            <a class="nav-source" href="https://github.com/dinhanhthi/side-by-side" target="_blank" rel="noopener noreferrer" data-tippy-content="View source on GitHub">Source</a>
         </header>
 
-        <div class="main-grid">
+        <main class="bench">
             <div class="workspace">
                 <div class="editor-stage" id="editorStage">
                     <canvas id="previewCanvas"></canvas>
@@ -802,16 +28,11 @@
                 </div>
             </div>
 
-            <div class="controls-panel">
-                <h2>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                    </svg>
-                    Options
-                </h2>
+            <aside class="controls-panel" aria-label="Options">
+                <h2>Options</h2>
 
                 <div class="control-group">
-                    <label>Grid layout</label>
+                    <label for="gridSelect">Grid layout</label>
                     <select id="gridSelect">
                         <option value="2,1">2 × 1</option>
                         <option value="1,2">1 × 2</option>
@@ -821,14 +42,14 @@
                         <option value="3,3">3 × 3</option>
                     </select>
                     <div class="custom-grid">
-                        <input type="number" id="customCols" value="2" min="1" max="6">
+                        <input type="number" id="customCols" value="2" min="1" max="6" aria-label="Columns">
                         <span>×</span>
-                        <input type="number" id="customRows" value="1" min="1" max="6">
+                        <input type="number" id="customRows" value="1" min="1" max="6" aria-label="Rows">
                     </div>
                 </div>
 
                 <div class="control-group">
-                    <label>Aspect ratio</label>
+                    <label for="aspectSelect">Aspect ratio</label>
                     <select id="aspectSelect">
                         <option value="auto">Auto (from images)</option>
                         <option value="1:1">1:1 (Square)</option>
@@ -946,7 +167,7 @@
                 </div>
 
                 <div class="panel-actions">
-                    <button class="btn btn-success" id="downloadBtn" data-tippy-content="Download the combined photo" disabled>
+                    <button class="btn btn-primary" id="downloadBtn" data-tippy-content="Download the combined photo" disabled>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                         </svg>
@@ -961,11 +182,11 @@
                         <span id="copyBtnLabel">Copy</span>
                     </button>
                 </div>
-            </div>
-        </div>
+            </aside>
+        </main>
 
-        <footer>
-            <p>100% offline. No uploads, no tracking. Your photos never leave your device. <a href="https://dinhanhthi.com" target="_blank" rel="noopener noreferrer">Anh-Thi DINH</a></p>
+        <footer class="foot-line">
+            <p>100% offline. No uploads, no tracking. Your photos never leave your device. Created by <a href="https://dinhanhthi.com" target="_blank" rel="noopener noreferrer">Anh-Thi DINH</a></p>
         </footer>
     </div>
 
@@ -1013,6 +234,26 @@
         const diagonalDirSection = document.getElementById('diagonalDirSection');
         const cropEmptyToggle = document.getElementById('cropEmptyToggle');
 
+        function cssColor(name) {
+            const raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+            const probe = document.createElement('span');
+            probe.style.color = raw;
+            document.documentElement.appendChild(probe);
+            const resolved = getComputedStyle(probe).color;
+            probe.remove();
+            return resolved || raw;
+        }
+
+        let paperFill = '';
+        let wellFill = '';
+        let inkStroke = '';
+        function refreshThemeFills() {
+            paperFill = cssColor('--color-paper');
+            wellFill = cssColor('--color-well');
+            inkStroke = cssColor('--color-ink');
+        }
+        refreshThemeFills();
+
         function setTip(el, text) {
             if (!el) return;
             el.setAttribute('data-tippy-content', text);
@@ -1030,7 +271,7 @@
             tippy.delegate(document.body, {
                 target: '[data-tippy-content]',
                 theme: 'sbs',
-                delay: [60, 0],
+                delay: [800, 0],
                 duration: [100, 80],
                 arrow: true,
                 appendTo: () => document.body,
@@ -1555,7 +796,7 @@
             if (L.diagonal) {
                 out.width = newCellW + border * 2;
                 out.height = newCellH + border * 2;
-                ctx.fillStyle = hasBorder ? borderColor : '#0e0e11';
+                ctx.fillStyle = hasBorder ? borderColor : paperFill;
                 ctx.fillRect(0, 0, out.width, out.height);
                 ctx.drawImage(
                     previewCanvas,
@@ -1569,7 +810,7 @@
             const innerH = rows * newCellH;
             out.width = Math.max(1, Math.round(innerW + (cols + 1) * border));
             out.height = Math.max(1, Math.round(innerH + (rows + 1) * border));
-            ctx.fillStyle = hasBorder ? borderColor : '#0e0e11';
+            ctx.fillStyle = hasBorder ? borderColor : paperFill;
             ctx.fillRect(0, 0, out.width, out.height);
 
             const gapX = srcCell.w + border;
@@ -1689,7 +930,7 @@
             previewCanvas.width = Math.max(1, Math.round(L.canvasW));
             previewCanvas.height = Math.max(1, Math.round(L.canvasH));
 
-            ctx.fillStyle = hasBorder ? borderColor : '#0e0e11';
+            ctx.fillStyle = hasBorder ? borderColor : paperFill;
             ctx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
 
             if (L.diagonal) {
@@ -1707,12 +948,12 @@
                     ctx.lineTo(tris[i][2][0], tris[i][2][1]);
                     ctx.closePath();
                     ctx.clip();
-                    ctx.fillStyle = '#1a1a1e';
+                    ctx.fillStyle = wellFill;
                     ctx.fillRect(ix, iy, iw, ih);
                     if (images[imgIndex]) drawCellImage(ctx, images[imgIndex], L.cells[i], imageTransforms[imgIndex]);
                     ctx.restore();
                 }
-                ctx.strokeStyle = hasBorder ? borderColor : 'rgba(255,255,255,0.85)';
+                ctx.strokeStyle = hasBorder ? borderColor : inkStroke;
                 ctx.lineWidth = L.border > 0 ? L.border : Math.max(2, L.canvasW * 0.004);
                 ctx.beginPath();
                 if (diagonalDirection === 'tlbr') { ctx.moveTo(ix, iy); ctx.lineTo(ix + iw, iy + ih); }
@@ -1728,7 +969,7 @@
                     if (images[i]) {
                         drawCellImage(ctx, images[i], rect, imageTransforms[i]);
                     } else {
-                        ctx.fillStyle = '#1a1a1e';
+                        ctx.fillStyle = wellFill;
                         ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
                     }
                     ctx.restore();
@@ -2006,19 +1247,23 @@
                     new ClipboardItem({ 'image/png': blob })
                 ]);
 
+                copyBtn.dataset.state = 'success';
                 copyBtnLabel.textContent = 'Copied!';
                 setTip(copyBtn, 'Copied!');
                 clearTimeout(copyFeedbackTimeout);
                 copyFeedbackTimeout = setTimeout(() => {
+                    delete copyBtn.dataset.state;
                     copyBtnLabel.textContent = 'Copy';
                     setTip(copyBtn, 'Copy the combined photo');
                 }, 2000);
             } catch (err) {
                 console.error('Failed to copy image:', err);
+                copyBtn.dataset.state = 'error';
                 copyBtnLabel.textContent = 'Copy failed';
                 setTip(copyBtn, 'Copy failed');
                 clearTimeout(copyFeedbackTimeout);
                 copyFeedbackTimeout = setTimeout(() => {
+                    delete copyBtn.dataset.state;
                     copyBtnLabel.textContent = 'Copy';
                     setTip(copyBtn, 'Copy the combined photo');
                 }, 2000);
