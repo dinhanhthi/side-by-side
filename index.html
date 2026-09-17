@@ -473,6 +473,13 @@
             font-size: 0.75rem;
         }
 
+        .export-hint {
+            margin: 0.2rem 0 0 1.4rem;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            line-height: 1.3;
+        }
+
         /* Border Options */
         .border-options {
             margin-top: 0.5rem;
@@ -877,6 +884,19 @@
                     </div>
                 </div>
 
+                <div class="control-group">
+                    <label class="checkbox-wrapper" title="When photos don't fill the frame, trim unused edges on download or copy">
+                        <input type="checkbox" id="cropEmptyToggle">
+                        <span class="checkbox-custom">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </span>
+                        <span class="checkbox-label">Crop empty edges</span>
+                    </label>
+                    <p class="export-hint">Applies to Download and Copy</p>
+                </div>
+
                 <div class="panel-actions">
                     <button class="btn btn-success" id="downloadBtn" disabled>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -915,6 +935,7 @@
         let hasBorder = false;
         let borderWidth = 0;
         let borderColor = '#ffffff';
+        let cropEmptyEdges = false;
         const MAX_DIM = 6;
         const MAX_TOTAL = 12;
 
@@ -940,6 +961,7 @@
         const diagonalToggle = document.getElementById('diagonalToggle');
         const diagonalDirToggle = document.getElementById('diagonalDirToggle');
         const diagonalDirSection = document.getElementById('diagonalDirSection');
+        const cropEmptyToggle = document.getElementById('cropEmptyToggle');
 
         function getTotalSlots() {
             return cols * rows;
@@ -1287,8 +1309,8 @@
             };
         }
 
-        // Draw one image inside a rect using cover-fit (fill + crop) + its transform.
-        function drawCellImage(ctx, img, rect, t) {
+        // Cover-fit + transform metrics for one image inside a cell (shared by draw + crop).
+        function getCellDrawMetrics(img, rect, t) {
             const tr = t || { scale: 1, panX: 0, panY: 0, flipX: false, flipY: false, rotate: 0 };
             const rot = ((tr.rotate % 360) + 360) % 360;
             const swapped = rot === 90 || rot === 270;
@@ -1300,12 +1322,134 @@
             const dh = img.height * ds;
             const cx = rect.x + rect.w / 2 + tr.panX;
             const cy = rect.y + rect.h / 2 + tr.panY;
+            return { tr, rot, dw, dh, cx, cy, swapped };
+        }
+
+        // Draw one image inside a rect using cover-fit (fill + crop) + its transform.
+        function drawCellImage(ctx, img, rect, t) {
+            const { tr, rot, dw, dh, cx, cy } = getCellDrawMetrics(img, rect, t);
             ctx.save();
             ctx.translate(cx, cy);
             if (rot) ctx.rotate(rot * Math.PI / 180);
             if (tr.flipX || tr.flipY) ctx.scale(tr.flipX ? -1 : 1, tr.flipY ? -1 : 1);
             ctx.drawImage(img, -dw / 2, -dh / 2, dw, dh);
             ctx.restore();
+        }
+
+        function intersectRects(a, b) {
+            const x = Math.max(a.x, b.x);
+            const y = Math.max(a.y, b.y);
+            const r = Math.min(a.x + a.w, b.x + b.w);
+            const btm = Math.min(a.y + a.h, b.y + b.h);
+            if (r <= x || btm <= y) return null;
+            return { x, y, w: r - x, h: btm - y };
+        }
+
+        function getImageDrawBounds(img, rect, t) {
+            const { dw, dh, cx, cy, swapped } = getCellDrawMetrics(img, rect, t);
+            const boxW = swapped ? dh : dw;
+            const boxH = swapped ? dw : dh;
+            return { x: cx - boxW / 2, y: cy - boxH / 2, w: boxW, h: boxH };
+        }
+
+        // Insets from cell edges to the visible photo (after clip). Empty if the photo is off-cell.
+        function getCellContentInsets(img, rect, t) {
+            const clipped = intersectRects(getImageDrawBounds(img, rect, t), rect);
+            if (!clipped) return { left: rect.w, right: 0, top: rect.h, bottom: 0 };
+            return {
+                left: clipped.x - rect.x,
+                top: clipped.y - rect.y,
+                right: (rect.x + rect.w) - (clipped.x + clipped.w),
+                bottom: (rect.y + rect.h) - (clipped.y + clipped.h)
+            };
+        }
+
+        // Tightest crop that still keeps every cell filled — same trim on every cell so alignment stays.
+        function getCommonContentInsets(layout) {
+            const total = getTotalSlots();
+            let left = 0, right = 0, top = 0, bottom = 0;
+            let found = false;
+            for (let i = 0; i < total; i++) {
+                if (!images[i]) continue;
+                const ins = getCellContentInsets(images[i], layout.cells[i], imageTransforms[i]);
+                if (!found) {
+                    left = ins.left;
+                    right = ins.right;
+                    top = ins.top;
+                    bottom = ins.bottom;
+                    found = true;
+                } else {
+                    left = Math.max(left, ins.left);
+                    right = Math.max(right, ins.right);
+                    top = Math.max(top, ins.top);
+                    bottom = Math.max(bottom, ins.bottom);
+                }
+            }
+            return { left, right, top, bottom };
+        }
+
+        function ceilInset(value) {
+            if (value < 0.5) return 0;
+            return Math.ceil(value);
+        }
+
+        // Canvas used by Download / Copy. Optionally stitches each cell after trimming unused edges.
+        function buildExportCanvas() {
+            if (!cropEmptyEdges) return previewCanvas;
+
+            const L = currentLayout || computeLayout();
+            const inset = getCommonContentInsets(L);
+            const trimL = ceilInset(inset.left);
+            const trimT = ceilInset(inset.top);
+            const trimR = ceilInset(inset.right);
+            const trimB = ceilInset(inset.bottom);
+            if (trimL + trimT + trimR + trimB === 0) return previewCanvas;
+
+            const srcCell = L.cells[0];
+            const newCellW = Math.floor(srcCell.w - trimL - trimR);
+            const newCellH = Math.floor(srcCell.h - trimT - trimB);
+            if (newCellW < 1 || newCellH < 1) return previewCanvas;
+
+            const border = L.border;
+            const out = document.createElement('canvas');
+            const ctx = out.getContext('2d');
+
+            if (L.diagonal) {
+                out.width = newCellW + border * 2;
+                out.height = newCellH + border * 2;
+                ctx.fillStyle = hasBorder ? borderColor : '#0e0e11';
+                ctx.fillRect(0, 0, out.width, out.height);
+                ctx.drawImage(
+                    previewCanvas,
+                    srcCell.x + trimL, srcCell.y + trimT, newCellW, newCellH,
+                    border, border, newCellW, newCellH
+                );
+                return out;
+            }
+
+            const innerW = cols * newCellW;
+            const innerH = rows * newCellH;
+            out.width = Math.max(1, Math.round(innerW + (cols + 1) * border));
+            out.height = Math.max(1, Math.round(innerH + (rows + 1) * border));
+            ctx.fillStyle = hasBorder ? borderColor : '#0e0e11';
+            ctx.fillRect(0, 0, out.width, out.height);
+
+            const gapX = srcCell.w + border;
+            const gapY = srcCell.h + border;
+            const total = getTotalSlots();
+            for (let i = 0; i < total; i++) {
+                const src = L.cells[i];
+                const c = gapX ? Math.round((src.x - border) / gapX) : 0;
+                const r = gapY ? Math.round((src.y - border) / gapY) : 0;
+                const dx = border + c * (newCellW + border);
+                const dy = border + r * (newCellH + border);
+                ctx.drawImage(
+                    previewCanvas,
+                    src.x + trimL, src.y + trimT, newCellW, newCellH,
+                    dx, dy, newCellW, newCellH
+                );
+            }
+            return out;
         }
 
         let currentLayout = null;
@@ -1565,6 +1709,12 @@
             updateUI();
         });
 
+        if (cropEmptyToggle) {
+            cropEmptyToggle.addEventListener('change', () => {
+                cropEmptyEdges = cropEmptyToggle.checked;
+            });
+        }
+
         function getTargetCanvasSize(loaded, cols, rows, border, aspectStr) {
             // aspectStr means the aspect ratio of the final combined photo (the whole result)
             const aspect = (aspectStr && aspectStr !== 'auto') ? aspectStr : null;
@@ -1603,10 +1753,11 @@
         // Download
         function downloadResult() {
             if (downloadBtn.disabled) return;
+            const canvas = buildExportCanvas();
             const link = document.createElement('a');
             const suffix = Math.random().toString(36).slice(2, 7);
             link.download = `combined-photo-${suffix}.png`;
-            link.href = previewCanvas.toDataURL('image/png');
+            link.href = canvas.toDataURL('image/png');
             link.click();
         }
 
@@ -1619,8 +1770,9 @@
             if (copyBtn.disabled) return;
 
             try {
+                const canvas = buildExportCanvas();
                 const blob = await new Promise((resolve, reject) => {
-                    previewCanvas.toBlob((result) => {
+                    canvas.toBlob((result) => {
                         if (result) resolve(result);
                         else reject(new Error('Failed to create image blob'));
                     }, 'image/png');
