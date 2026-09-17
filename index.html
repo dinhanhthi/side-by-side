@@ -296,6 +296,11 @@
             transform: scale(1.1);
         }
 
+        .zoom-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
         /* Controls Panel */
         .controls-panel {
             background: var(--surface);
@@ -960,6 +965,20 @@
                     <div class="zoom-controls">
                         <button class="zoom-btn" type="button" data-zoom="out" aria-label="Zoom out photo ${i + 1}" title="Zoom out">&minus;</button>
                         <button class="zoom-btn" type="button" data-zoom="in" aria-label="Zoom in photo ${i + 1}" title="Zoom in">+</button>
+                        <button class="zoom-btn" type="button" data-flip="h" aria-label="Flip photo ${i + 1} horizontally" title="Flip horizontal">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M8 7 4 12l4 5"/>
+                                <path d="m16 7 4 5-4 5"/>
+                                <path d="M12 4v16"/>
+                            </svg>
+                        </button>
+                        <button class="zoom-btn" type="button" data-flip="v" aria-label="Flip photo ${i + 1} vertically" title="Flip vertical">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m7 8 5-4 5 4"/>
+                                <path d="m7 16 5 4 5-4"/>
+                                <path d="M4 12h16"/>
+                            </svg>
+                        </button>
                     </div>
                 `;
 
@@ -1029,7 +1048,7 @@
             };
             const ensureT = () => {
                 let t = imageTransforms[index];
-                if (!t) { t = { scale: 1, panX: 0, panY: 0 }; imageTransforms[index] = t; }
+                if (!t) { t = { scale: 1, panX: 0, panY: 0, flipX: false, flipY: false }; imageTransforms[index] = t; }
                 return t;
             };
 
@@ -1045,10 +1064,21 @@
                 renderCanvas();
             };
 
-            cell.querySelectorAll('.zoom-btn').forEach((btn) => {
+            cell.querySelectorAll('[data-zoom]').forEach((btn) => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     zoomBy(btn.dataset.zoom === 'in' ? 1.05 : 1 / 1.05);
+                });
+            });
+
+            cell.querySelectorAll('[data-flip]').forEach((btn) => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (!images[index]) return;
+                    const t = ensureT();
+                    if (btn.dataset.flip === 'v') t.flipY = !t.flipY;
+                    else t.flipX = !t.flipX;
+                    renderCanvas();
                 });
             });
 
@@ -1088,7 +1118,7 @@
             };
             cell.addEventListener('mousedown', (e) => {
                 if (e.button !== 0 || !images[index]) return;
-                if (e.target.closest('.remove-image-btn') || e.target.closest('.zoom-btn')) return;
+                if (e.target.closest('.remove-image-btn') || e.target.closest('.zoom-controls')) return;
                 const t = ensureT();
                 dragging = true;
                 sx = e.clientX; sy = e.clientY; spx = t.panX; spy = t.panY;
@@ -1098,9 +1128,9 @@
             });
             cell.addEventListener('dblclick', (e) => {
                 if (!images[index]) return;
-                if (e.target.closest('.zoom-btn')) return;
+                if (e.target.closest('.zoom-controls')) return;
                 e.stopPropagation();
-                imageTransforms[index] = { scale: 1, panX: 0, panY: 0 };
+                imageTransforms[index] = { scale: 1, panX: 0, panY: 0, flipX: false, flipY: false };
                 renderCanvas();
             });
         }
@@ -1109,7 +1139,7 @@
             const img = new Image();
             img.onload = () => {
                 images[index] = img;
-                imageTransforms[index] = { scale: 1, panX: 0, panY: 0 };
+                imageTransforms[index] = { scale: 1, panX: 0, panY: 0, flipX: false, flipY: false };
                 syncOverlay();
                 updateUI();
             };
@@ -1218,13 +1248,21 @@
 
         // Draw one image inside a rect using cover-fit (fill + crop) + its transform.
         function drawCellImage(ctx, img, rect, t) {
-            const tr = t || { scale: 1, panX: 0, panY: 0 };
+            const tr = t || { scale: 1, panX: 0, panY: 0, flipX: false, flipY: false };
             const base = Math.max(rect.w / img.width, rect.h / img.height) || 1;
             const ds = base * tr.scale;
             const dw = img.width * ds;
             const dh = img.height * ds;
             const dx = rect.x + (rect.w - dw) / 2 + tr.panX;
             const dy = rect.y + (rect.h - dh) / 2 + tr.panY;
+            if (tr.flipX || tr.flipY) {
+                ctx.save();
+                ctx.translate(dx + dw / 2, dy + dh / 2);
+                ctx.scale(tr.flipX ? -1 : 1, tr.flipY ? -1 : 1);
+                ctx.drawImage(img, -dw / 2, -dh / 2, dw, dh);
+                ctx.restore();
+                return;
+            }
             ctx.drawImage(img, dx, dy, dw, dh);
         }
 
@@ -1332,7 +1370,7 @@
 
         // Reset every loaded photo's pan/zoom to the default cover-fit
         function resetTransforms() {
-            imageTransforms = images.map(im => im ? { scale: 1, panX: 0, panY: 0 } : null);
+            imageTransforms = images.map(im => im ? { scale: 1, panX: 0, panY: 0, flipX: false, flipY: false } : null);
         }
 
         function updateFrameOrderVisibility() {
